@@ -3,3 +3,4 @@ image_data
 __pycache__
 venv
 results
+weights

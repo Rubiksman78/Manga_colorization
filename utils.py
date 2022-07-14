@@ -1,6 +1,7 @@
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
+import wandb
 
 def my_collate(batch,dataset):
     len_batch = len(batch) # original batch length
@@ -43,6 +44,7 @@ def plot_test(gen1,gen2,data1,data2,epoch):
         plt.imshow(fake_2.transpose(1,2,0))
         plt.title("Fake")
         plt.axis("off")
+    wandb.log({"test_image": plt})
     plt.savefig(f"results/{epoch+1}_2.png")
     plt.close()
     
