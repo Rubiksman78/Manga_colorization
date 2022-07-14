@@ -1,6 +1,6 @@
 DEFAULT_CONFIG = {
-    "WIDTH":128,
-    "HEIGHT":204,
+    "WIDTH":204,
+    "HEIGHT":128,
     "BATCH_SIZE":8,
     "LR":2e-4,
     "DATASET":"image_data",

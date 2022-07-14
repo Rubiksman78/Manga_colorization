@@ -10,8 +10,8 @@ class ImageDataset(Dataset):
         self.transform = transform
         self.unaligned = unaligned
 
-        self.files_A = sorted(glob.glob(os.path.join(root, "A") + "\\*.*"))
-        self.files_B = sorted(glob.glob(os.path.join(root, "B") + "\\*.*"))
+        self.files_A = sorted(glob.glob(os.path.join(root, "A") + "/*.*"))
+        self.files_B = sorted(glob.glob(os.path.join(root, "B") + "/*.*"))
 
     def __getitem__(self, index):
         try:
