@@ -52,7 +52,7 @@ def train(epochs):
             losses = train_step(BATCH_SIZE,gen1,gen2,disc1,disc2,data1,data2,optG1,optG2,optD1,optD2,cycle_crit,identity_crit,adversarial_crit,device)
             disc_loss,gen_loss,identity_loss,gan_loss,cycle_loss = losses["Loss D"],losses["Loss G"],losses["Loss Identity"],losses["Loss Gan"],losses["Loss Cycle"]
             progress_bar.set_description(f"Epoch {epoch+1}/{epochs}")
-            dict = {"Discriminator Loss":disc_loss}
+            dict = {"Discriminator Loss":float(disc_loss)}
             progress_bar.set_postfix({"Discriminator Loss":f"{disc_loss:.4f}","Generator Loss":f"{gen_loss:.4f}","Identity Loss":f"{identity_loss:.4f}","Gan Loss":f"{gan_loss:.4f}","Cycle Loss":f"{cycle_loss:.4f}"})
             wandb.log(dict)
             identity_losses.append(identity_loss)
