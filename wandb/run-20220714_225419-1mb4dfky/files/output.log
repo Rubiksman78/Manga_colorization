@@ -1,0 +1,16 @@
+
+  0%|                                                                                                                                                             | 0/447 [00:00<?, ?it/s]
+
+Epoch 1/100:   0%|                      | 1/447 [02:38<19:37:21, 158.39s/it, Discriminator Loss=7.4986, Generator Loss=29.3170, Identity Loss=8.6268, Gan Loss=3.5073, Cycle Loss=17.1828]
+Traceback (most recent call last):
+  File "C:\SAM_FOLDER\Manga_colorization\train.py", line 68, in <module>
+    train(EPOCHS)
+  File "C:\SAM_FOLDER\Manga_colorization\train.py", line 52, in train
+    losses = train_step(BATCH_SIZE,gen1,gen2,disc1,disc2,data1,data2,optG1,optG2,optD1,optD2,cycle_crit,identity_crit,adversarial_crit,device)
+  File "C:\SAM_FOLDER\Manga_colorization\model.py", line 118, in train_step
+    errG.backward()
+  File "C:\SAM_FOLDER\Manga_colorization\venv\lib\site-packages\torch\_tensor.py", line 396, in backward
+    torch.autograd.backward(self, gradient, retain_graph, create_graph, inputs=inputs)
+  File "C:\SAM_FOLDER\Manga_colorization\venv\lib\site-packages\torch\autograd\__init__.py", line 173, in backward
+    Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+KeyboardInterrupt

@@ -1,0 +1,1 @@
+{"Discriminator Loss": 7.49864786863327, "Generator Loss": 29.316957473754883, "Identity Loss": 8.626808881759644, "Gan Loss": 3.507331609725952, "Cycle Loss": 17.18281602859497, "_timestamp": 1657832149, "_runtime": 89, "_step": 0, "_wandb": {"runtime": 159}}

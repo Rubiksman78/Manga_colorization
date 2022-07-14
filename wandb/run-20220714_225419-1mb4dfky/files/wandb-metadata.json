@@ -1,0 +1,22 @@
+{
+    "os": "Windows-10-10.0.22000-SP0",
+    "python": "3.9.13",
+    "heartbeatAt": "2022-07-14T20:54:21.715069",
+    "startedAt": "2022-07-14T20:54:19.891841",
+    "docker": null,
+    "cpu_count": 8,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "C:\\SAM_FOLDER\\Manga_colorization\\train.py",
+    "codePath": "train.py",
+    "git": {
+        "remote": "https://github.com/Rubiksman78/Manga_colorization.git",
+        "commit": "a633cbdb33a11bc8347e52bd4d06613c62513a26"
+    },
+    "email": "samuelabc78310@gmail.com",
+    "root": "C:/SAM_FOLDER/Manga_colorization",
+    "host": "DESKTOP-8793QIE",
+    "username": "Invite",
+    "executable": "C:\\SAM_FOLDER\\Manga_colorization\\venv\\Scripts\\python.exe"
+}
