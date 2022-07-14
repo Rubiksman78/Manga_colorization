@@ -1,0 +1,8 @@
+torch
+numpy
+Pillow
+matplotlib
+torchvision
+tqdm
+torchsummary
+pdf2image

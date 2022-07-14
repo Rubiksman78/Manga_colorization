@@ -1,13 +1,10 @@
 from dataset import ImageDataset
 from model import *
 import torchvision.transforms as transforms
-from PIL import Image
 import torch
 import torch.nn as nn
 from tqdm import tqdm
-import numpy as np
 from PIL import ImageFile
-import matplotlib.pyplot as plt
 from config import DEFAULT_CONFIG
 from utils import *
 
