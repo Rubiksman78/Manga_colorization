@@ -23,12 +23,11 @@ def plot_test(gen1,gen2,data1,data2,epoch):
         im = im.detach().cpu().numpy()*0.5+0.5
         plt.subplot(n,2,2*i+1)
         plt.imshow(im.transpose(1,2,0))
-        plt.title("Real")
         plt.axis("off")
         plt.subplot(n,2,2*i+2)
         plt.imshow(fake_1.transpose(1,2,0))
-        plt.title("Fake")
         plt.axis("off")
+    wandb.log({"Grey_images": plt})
     plt.savefig(f"results/{epoch+1}.png")
     plt.close()
     fig = plt.figure(figsize=(12,12))
@@ -38,13 +37,11 @@ def plot_test(gen1,gen2,data1,data2,epoch):
         im = im.detach().cpu().numpy()*0.5+0.5
         plt.subplot(n,2,2*i+1)
         plt.imshow(im.transpose(1,2,0))
-        plt.title("Real")
         plt.axis("off")
         plt.subplot(n,2,2*i+2)
         plt.imshow(fake_2.transpose(1,2,0))
-        plt.title("Fake")
         plt.axis("off")
-    wandb.log({"test_image": plt})
+    wandb.log({"Color_images": plt})
     plt.savefig(f"results/{epoch+1}_2.png")
     plt.close()
     
