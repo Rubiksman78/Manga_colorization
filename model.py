@@ -3,35 +3,40 @@ import torch.nn as nn
 from torchsummary import summary
 
 class Discriminator(nn.Module):
-    def __init__(self):
+    def __init__(self,input_nc,ndf=64,n_layers=3,norm_layer=nn.BatchNorm2d,use_sigmoid = False):
         super(Discriminator, self).__init__()
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=2, padding=1)
-        self.conv2 = nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1)
-        self.conv3 = nn.Conv2d(128, 256, kernel_size=3, stride=2, padding=1)
-        self.conv4 = nn.Conv2d(256, 512, kernel_size=3, stride=2, padding=1)
-        self.conv5 = nn.Conv2d(512, 1, kernel_size=4, stride=1, padding=0)
-        self.in1 = nn.InstanceNorm2d(64)
-        self.in2 = nn.InstanceNorm2d(128)
-        self.in3 = nn.InstanceNorm2d(256)
-        self.in4 = nn.InstanceNorm2d(512)
-        self.relu = nn.ReLU()
-        self.leaky = nn.LeakyReLU(0.2)
-        self.dropout = nn.Dropout(0.5)
-        self.conv6 = nn.Conv2d(512,512,kernel_size=3,stride=2,padding=1)
-        self.in5 = nn.InstanceNorm2d(512)
-    
-    def forward(self, x):
-        in_size = x.shape[-1]
-        x = self.relu(self.in1(self.conv1(x)))
-        x = self.relu(self.in2(self.conv2(x)))
-        x = self.relu(self.in3(self.conv3(x)))
-        x = self.relu(self.in4(self.conv4(x)))
-        if in_size == 128:
-            x = self.relu(self.in5(self.conv6(x)))
-        x = self.conv5(x)
-        x = torch.flatten(x,1)
-        return x
-
+        kw = 4
+        padw = 1
+        sequence = [
+            nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=2, padding=padw),
+            nn.LeakyReLU(0.2, True)
+        ]
+        nf_mult = 1
+        nf_mult_prev = 1
+        for n in range(1, n_layers):
+            nf_mult_prev = nf_mult
+            nf_mult = min(2**n, 8)
+            sequence += [
+                nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult, kernel_size=kw, stride=2, padding=padw, bias=False),
+                norm_layer(ndf * nf_mult),
+                nn.LeakyReLU(0.2, True)
+            ]
+        nf_mult_prev = nf_mult
+        nf_mult = min(2**n_layers, 8)
+        sequence += [
+            nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult, kernel_size=kw, stride=1, padding=padw, bias=False),
+            norm_layer(ndf * nf_mult),
+            nn.LeakyReLU(0.2, True)
+        ]
+        sequence += [nn.Conv2d(ndf * nf_mult, 1, kernel_size=kw, stride=1, padding=padw)]
+        self.model = nn.Sequential(*sequence)
+        
+        if use_sigmoid:
+            self.model.add_module('sigmoid', nn.Sigmoid())
+            
+    def forward(self, input):
+        return self.model(input)
+       
 class Resnet_Block(nn.Module):
     def __init__(self,n_filters):
         super(Resnet_Block, self).__init__()
@@ -47,40 +52,42 @@ class Resnet_Block(nn.Module):
         return y + x
 
 class Generator(nn.Module):
-    def __init__(self,n_resnet):
+    def __init__(self,input_nc,output_nc,ngf=64,n_resnet=6):
         super(Generator, self).__init__()
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1)
-        self.conv2 = nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1)
-        self.conv3 = nn.Conv2d(128, 256, kernel_size=3, stride=2, padding=1)
-        self.in1 = nn.InstanceNorm2d(64)
-        self.in2 = nn.InstanceNorm2d(128)
-        self.in3 = nn.InstanceNorm2d(256)
-        self.resnet = Resnet_Block(256)
-        self.conv4 = nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1)
-        self.conv5 = nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1)
-        self.conv6 = nn.ConvTranspose2d(64, 3, kernel_size=3, stride=1, padding=1)
-        self.in4 = nn.InstanceNorm2d(128)
-        self.in5 = nn.InstanceNorm2d(64)
-        self.relu = nn.ReLU()
-        self.tanh = nn.Tanh()
-        self.n_resnet = n_resnet
-
+        self.input_nc = input_nc
+        self.output_nc = output_nc
+        self.ngf = ngf
+        model = [nn.ReflectionPad2d(3),
+                 nn.Conv2d(input_nc, ngf, kernel_size=7, padding=0),
+                 nn.InstanceNorm2d(ngf),
+                 nn.ReLU(True)]
+        n_downsampling = 2
+        for i in range(n_downsampling):
+            mult = 2**i
+            model += [nn.Conv2d(ngf * mult, ngf * mult * 2, kernel_size=3, stride=2, padding=1),
+                      nn.InstanceNorm2d(ngf * mult * 2),
+                      nn.ReLU(True)]
+        mult = 2**n_downsampling
+        for i in range(n_resnet):
+            model += [Resnet_Block(ngf * mult)]
+        for i in range(n_downsampling):
+            mult = 2**(n_downsampling - i)
+            model += [nn.ConvTranspose2d(ngf * mult, int(ngf * mult / 2), kernel_size=3, stride=2, padding=1, output_padding=1),
+                      nn.InstanceNorm2d(int(ngf * mult / 2)),
+                      nn.ReLU(True)]
+        model += [nn.ReflectionPad2d(3),
+                  nn.Conv2d(ngf, output_nc, kernel_size=7, padding=0),
+                  nn.Tanh()]
+        self.model = nn.Sequential(*model)
+        
     def forward(self, x):
-        x = self.relu(self.in1(self.conv1(x)))
-        x = self.relu(self.in2(self.conv2(x)))
-        x = self.relu(self.in3(self.conv3(x)))
-        for _ in range(self.n_resnet):
-            x = self.resnet(x)
-        x = self.relu(self.in4(self.conv4(x)))
-        x = self.relu(self.in5(self.conv5(x)))
-        x = self.tanh(self.conv6(x))
-        return x
+        return self.model(x)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-#gen = Generator(n_resnet=8).to(device)
-#print(summary(gen,(3,128,int(1.58*128))))
-#dis = Discriminator().to(device)
-#print(summary(dis,(3,128,int(1.58*128))))
+gen = Generator(3,3,n_resnet=8).to(device)
+print(summary(gen,(3,128,204)))
+dis = Discriminator(3).to(device)
+print(summary(dis,(3,128,204)))
 
 def train_step(batch_size,gen1,gen2,disc1,disc2,data1,data2,gen1_optim,disc1_optim,gen2_optim,disc2_optim,cycle_loss,identity_loss,adversarial_loss,device):
     #Gen1 = genB2A, Gen2 = genA2B
@@ -91,9 +98,9 @@ def train_step(batch_size,gen1,gen2,disc1,disc2,data1,data2,gen1_optim,disc1_opt
 
     #Identity loss
     identity_image_A = gen1(data1)
-    loss_identity_A = identity_loss(identity_image_A,data1) * 5.0
+    loss_identity_A = identity_loss(identity_image_A,data1) 
     identity_image_B = gen2(data2)
-    loss_identity_B = identity_loss(identity_image_B,data2) * 5.0
+    loss_identity_B = identity_loss(identity_image_B,data2) 
 
     #Gan loss
     fake_image_A = gen1(data2)
@@ -110,9 +117,9 @@ def train_step(batch_size,gen1,gen2,disc1,disc2,data1,data2,gen1_optim,disc1_opt
 
     #Cycle loss
     recovered_image_A = gen1(fake_image_B)
-    loss_cycle_A = cycle_loss(recovered_image_A,data1) * 10.0
+    loss_cycle_A = cycle_loss(recovered_image_A,data1) 
     recovered_image_B = gen2(fake_image_A)
-    loss_cycle_B = cycle_loss(recovered_image_B,data2) * 10.0
+    loss_cycle_B = cycle_loss(recovered_image_B,data2) 
 
     errG = loss_identity_A + loss_identity_B + loss_gan_1 + loss_gan_2 + loss_cycle_A + loss_cycle_B
     errG.backward()
