@@ -2,7 +2,6 @@ from pdf2image import convert_from_path
 import os
 
 def pdf_volume_to_images(pdf_path, images_path):
-    print(pdf_path)
     pages = convert_from_path(pdf_path)
     for i in range(len(pages)):
         pages[i].save(images_path.split('.')[0] + 'page_' + str(i) + '.jpg','JPEG')
@@ -15,4 +14,3 @@ if __name__ == '__main__':
     pdf_path = 'pdf_data/color/'
     images_path = 'image_data/color/'
     all_volumes_to_images(pdf_path, images_path)
-    print('Done!')

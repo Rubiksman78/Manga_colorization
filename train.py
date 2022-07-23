@@ -9,7 +9,7 @@ from config import DEFAULT_CONFIG
 from utils import *
 import wandb 
 
-wandb.init(project='Manga_color',config=DEFAULT_CONFIG,name='test1')
+wandb.init(project='Manga_color',config=DEFAULT_CONFIG,name='test1',mode='disabled')
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -28,8 +28,8 @@ my_collate = lambda x: my_collate(x,dataset)
 dataloader = torch.utils.data.DataLoader(dataset,batch_size=BATCH_SIZE,shuffle=True,pin_memory=True,drop_last=True)
 gen1 = Generator(3,3,8).to(device)
 gen2 = Generator(3,8).to(device)
-disc1 = Discriminator().to(device)
-disc2 = Discriminator().to(device)
+disc1 = Discriminator(3).to(device)
+disc2 = Discriminator(3).to(device)
 
 cycle_crit = nn.L1Loss().to(device)
 identity_crit = nn.L1Loss().to(device)

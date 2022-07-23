@@ -84,10 +84,10 @@ class Generator(nn.Module):
         return self.model(x)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-gen = Generator(3,3,n_resnet=8).to(device)
-print(summary(gen,(3,128,204)))
-dis = Discriminator(3).to(device)
-print(summary(dis,(3,128,204)))
+#gen = Generator(3,3,n_resnet=8).to(device)
+#print(summary(gen,(3,128,204)))
+#dis = Discriminator(3).to(device)
+#print(summary(dis,(3,128,204)))
 
 def train_step(batch_size,gen1,gen2,disc1,disc2,data1,data2,gen1_optim,disc1_optim,gen2_optim,disc2_optim,cycle_loss,identity_loss,adversarial_loss,device):
     #Gen1 = genB2A, Gen2 = genA2B
