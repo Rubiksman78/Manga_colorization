@@ -121,9 +121,11 @@ def train_step(batch_size,gen1,gen2,disc1,disc2,data1,data2,gen1_optim,disc1_opt
     recovered_image_B = gen2(fake_image_A)
     loss_cycle_B = cycle_loss(recovered_image_B,data2) 
 
-    errG = loss_identity_A + loss_identity_B + loss_gan_1 + loss_gan_2 + loss_cycle_A + loss_cycle_B
-    errG.backward()
+    errG1 = loss_identity_A + loss_gan_1 + loss_cycle_A 
+    errG2 = loss_identity_B + loss_gan_2 + loss_cycle_B
+    errG1.backward()
     gen1_optim.step()
+    errG2.backward()
     gen2_optim.step()
 
     #Update disc1
