@@ -3,7 +3,7 @@ import torch.nn as nn
 from torchsummary import summary
 
 class Discriminator(nn.Module):
-    def __init__(self,input_nc,ndf=64,n_layers=3,norm_layer=nn.BatchNorm2d,use_sigmoid = False):
+    def __init__(self,input_nc,ndf=64,n_layers=3,norm_layer=nn.BatchNorm2d,use_sigmoid = True):
         super(Discriminator, self).__init__()
         kw = 4
         padw = 1
