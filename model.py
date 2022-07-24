@@ -103,6 +103,7 @@ def train_step(batch_size,gen1,gen2,disc1,disc2,data1,data2,gen1_optim,disc1_opt
     fake_label = torch.zeros_like(fake_output_A).to(device)
     
     loss_gan_1 = adversarial_loss(fake_output_A,real_label)
+    fake_image_B = gen2(data1)
     recovered_image_A = gen1(fake_image_B)
     loss_cycle_A = cycle_loss(recovered_image_A,data1) 
     errG1 = loss_identity_A + loss_gan_1 + loss_cycle_A 
@@ -115,6 +116,7 @@ def train_step(batch_size,gen1,gen2,disc1,disc2,data1,data2,gen1_optim,disc1_opt
     fake_image_B = gen2(data1)
     fake_output_B = disc2(fake_image_B)
     loss_gan_2 = adversarial_loss(fake_output_B,real_label)
+    fake_image_A = gen1(data2)
     recovered_image_B = gen2(fake_image_A)
     loss_cycle_B = cycle_loss(recovered_image_B,data2) 
     errG2 = loss_identity_B + loss_gan_2 + loss_cycle_B
