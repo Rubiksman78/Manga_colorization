@@ -9,7 +9,7 @@ from config import DEFAULT_CONFIG
 from utils import *
 import wandb 
 
-wandb.init(project='Manga_color',config=DEFAULT_CONFIG,name='test1')
+wandb.init(project='Manga_color',config=DEFAULT_CONFIG,name='test1',mode='disabled')
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")

@@ -93,38 +93,31 @@ def train_step(batch_size,gen1,gen2,disc1,disc2,data1,data2,gen1_optim,disc1_opt
     #Gen1 = genB2A, Gen2 = genA2B
     #data1 = A, data2 = B
     #Update gen1 and gen2
-    gen1_optim.zero_grad()
-    gen2_optim.zero_grad()
-
-    #Identity loss
+    gen1_optim.zero_grad()    
     identity_image_A = gen1(data1)
     loss_identity_A = identity_loss(identity_image_A,data1) 
-    identity_image_B = gen2(data2)
-    loss_identity_B = identity_loss(identity_image_B,data2) 
-
-    #Gan loss
     fake_image_A = gen1(data2)
     fake_output_A = disc1(fake_image_A)
     
-    #Labels like disc output
     real_label = torch.ones_like(fake_output_A).to(device)
     fake_label = torch.zeros_like(fake_output_A).to(device)
     
     loss_gan_1 = adversarial_loss(fake_output_A,real_label)
+    recovered_image_A = gen1(fake_image_B)
+    loss_cycle_A = cycle_loss(recovered_image_A,data1) 
+    errG1 = loss_identity_A + loss_gan_1 + loss_cycle_A 
+    errG1.backward()
+    gen1_optim.step()
+    
+    gen2_optim.zero_grad()
+    identity_image_B = gen2(data2)
+    loss_identity_B = identity_loss(identity_image_B,data2) 
     fake_image_B = gen2(data1)
     fake_output_B = disc2(fake_image_B)
     loss_gan_2 = adversarial_loss(fake_output_B,real_label)
-
-    #Cycle loss
-    recovered_image_A = gen1(fake_image_B)
-    loss_cycle_A = cycle_loss(recovered_image_A,data1) 
     recovered_image_B = gen2(fake_image_A)
     loss_cycle_B = cycle_loss(recovered_image_B,data2) 
-
-    errG1 = loss_identity_A + loss_gan_1 + loss_cycle_A 
     errG2 = loss_identity_B + loss_gan_2 + loss_cycle_B
-    errG1.backward()
-    gen1_optim.step()
     errG2.backward()
     gen2_optim.step()
 
@@ -149,4 +142,4 @@ def train_step(batch_size,gen1,gen2,disc1,disc2,data1,data2,gen1_optim,disc1_opt
     errD_B = (loss_real_B + loss_fake_B)/2
     errD_B.backward()
     disc2_optim.step()
-    return {"Loss D":errD_A.item() + errD_B.item(),"Loss G":errG.item(),"Loss Identity":loss_identity_A.item() + loss_identity_B.item(),"Loss Gan":loss_gan_1.item() + loss_gan_2.item(),"Loss Cycle":loss_cycle_A.item() + loss_cycle_B.item()}
+    return {"Loss D":errD_A.item() + errD_B.item(),"Loss G":errG1.item()+errG2.item(),"Loss Identity":loss_identity_A.item() + loss_identity_B.item(),"Loss Gan":loss_gan_1.item() + loss_gan_2.item(),"Loss Cycle":loss_cycle_A.item() + loss_cycle_B.item()}
