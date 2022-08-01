@@ -1,6 +1,11 @@
+from turtle import width
 import torch 
 import torch.nn as nn
 from torchsummary import summary
+from config import DEFAULT_CONFIG
+
+WIDTH,HEIGHT = DEFAULT_CONFIG["WIDTH"],DEFAULT_CONFIG["HEIGHT"]
+print_model = DEFAULT_CONFIG["PRINT_MODEL"]
 
 class Discriminator(nn.Module):
     def __init__(self,input_nc,ndf=64,n_layers=3,norm_layer=nn.BatchNorm2d,use_sigmoid = True):
@@ -52,7 +57,7 @@ class Resnet_Block(nn.Module):
         return y + x
 
 class Generator(nn.Module):
-    def __init__(self,input_nc,output_nc,ngf=64,n_resnet=6):
+    def __init__(self,input_nc,output_nc,ngf=64,n_resnet=9):
         super(Generator, self).__init__()
         self.input_nc = input_nc
         self.output_nc = output_nc
@@ -72,7 +77,12 @@ class Generator(nn.Module):
             model += [Resnet_Block(ngf * mult)]
         for i in range(n_downsampling):
             mult = 2**(n_downsampling - i)
-            model += [nn.ConvTranspose2d(ngf * mult, int(ngf * mult / 2), kernel_size=3, stride=2, padding=1, output_padding=1),
+            model += [nn.ConvTranspose2d(ngf * mult,
+                                         int(ngf * mult / 2),
+                                         kernel_size=3,
+                                         stride=2,
+                                         padding=1,
+                                         output_padding=1),
                       nn.InstanceNorm2d(int(ngf * mult / 2)),
                       nn.ReLU(True)]
         model += [nn.ReflectionPad2d(3),
@@ -83,13 +93,30 @@ class Generator(nn.Module):
     def forward(self, x):
         return self.model(x)
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-#gen = Generator(3,3,n_resnet=8).to(device)
-#print(summary(gen,(3,128,204)))
-#dis = Discriminator(3).to(device)
-#print(summary(dis,(3,128,204)))
+if print_model:
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    gen = Generator(3,3,n_resnet=9).to(device)
+    print(summary(gen,(3,HEIGHT,WIDTH)))
+    dis = Discriminator(3).to(device)
+    print(summary(dis,(3,HEIGHT,WIDTH)))
 
-def train_step(batch_size,gen1,gen2,disc1,disc2,data1,data2,gen1_optim,disc1_optim,gen2_optim,disc2_optim,cycle_loss,identity_loss,adversarial_loss,device):
+def train_step(
+        batch_size,
+        gen1,
+        gen2,
+        disc1,
+        disc2,
+        data1,
+        data2,
+        gen1_optim,
+        disc1_optim,
+        gen2_optim,
+        disc2_optim,
+        cycle_loss,
+        identity_loss,
+        adversarial_loss,
+        device
+        ):
     #Gen1 = genB2A, Gen2 = genA2B
     #data1 = A, data2 = B
     #Update gen1 and gen2
@@ -144,4 +171,10 @@ def train_step(batch_size,gen1,gen2,disc1,disc2,data1,data2,gen1_optim,disc1_opt
     errD_B = (loss_real_B + loss_fake_B)/2
     errD_B.backward()
     disc2_optim.step()
-    return {"Loss D":errD_A.item() + errD_B.item(),"Loss G":errG1.item()+errG2.item(),"Loss Identity":loss_identity_A.item() + loss_identity_B.item(),"Loss Gan":loss_gan_1.item() + loss_gan_2.item(),"Loss Cycle":loss_cycle_A.item() + loss_cycle_B.item()}
+    return {
+            "Loss D":errD_A.item() + errD_B.item(),
+            "Loss G":errG1.item()+errG2.item(),
+            "Loss Identity":loss_identity_A.item() + loss_identity_B.item(),
+            "Loss Gan":loss_gan_1.item() + loss_gan_2.item(),
+            "Loss Cycle":loss_cycle_A.item() + loss_cycle_B.item()
+            }
