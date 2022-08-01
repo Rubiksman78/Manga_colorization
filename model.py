@@ -102,59 +102,59 @@ if print_model:
 
 def train_step(
         batch_size,
-        gen1,
-        gen2,
+        genB2A,
+        genA2B,
         disc1,
         disc2,
-        data1,
-        data2,
-        gen1_optim,
+        dataA,
+        dataB,
+        genB2A_optim,
         disc1_optim,
-        gen2_optim,
+        genA2B_optim,
         disc2_optim,
         cycle_loss,
         identity_loss,
         adversarial_loss,
         device
         ):
-    #Gen1 = genB2A, Gen2 = genA2B
-    #data1 = A, data2 = B
-    #Update gen1 and gen2
-    gen1_optim.zero_grad()    
-    identity_image_A = gen1(data1)
-    loss_identity_A = identity_loss(identity_image_A,data1) 
-    fake_image_A = gen1(data2)
+    #data1 = A (Gray images), data2 = B (color images)
+    #Update gen1
+    genB2A_optim.zero_grad()    
+    identity_image_A = genB2A(dataA)
+    loss_identity_A = identity_loss(identity_image_A,dataA) 
+    fake_image_A = genB2A(dataB)
     fake_output_A = disc1(fake_image_A)
     
     real_label = torch.ones_like(fake_output_A).to(device)
     fake_label = torch.zeros_like(fake_output_A).to(device)
     
     loss_gan_1 = adversarial_loss(fake_output_A,real_label)
-    fake_image_B = gen2(data1)
-    recovered_image_A = gen1(fake_image_B)
-    loss_cycle_A = cycle_loss(recovered_image_A,data1) 
+    fake_image_B = genA2B(dataA)
+    recovered_image_A = genB2A(fake_image_B)
+    loss_cycle_A = cycle_loss(recovered_image_A,dataA) 
     errG1 = loss_identity_A + loss_gan_1 + loss_cycle_A 
     errG1.backward()
-    gen1_optim.step()
+    genB2A_optim.step()
     
-    gen2_optim.zero_grad()
-    identity_image_B = gen2(data2)
-    loss_identity_B = identity_loss(identity_image_B,data2) 
-    fake_image_B = gen2(data1)
+    #Update gen2
+    genA2B_optim.zero_grad()
+    identity_image_B = genA2B(dataB)
+    loss_identity_B = identity_loss(identity_image_B,dataB) 
+    fake_image_B = genA2B(dataA)
     fake_output_B = disc2(fake_image_B)
     loss_gan_2 = adversarial_loss(fake_output_B,real_label)
-    fake_image_A = gen1(data2)
-    recovered_image_B = gen2(fake_image_A)
-    loss_cycle_B = cycle_loss(recovered_image_B,data2) 
+    fake_image_A = genB2A(dataB)
+    recovered_image_B = genA2B(fake_image_A)
+    loss_cycle_B = cycle_loss(recovered_image_B,dataB) 
     errG2 = loss_identity_B + loss_gan_2 + loss_cycle_B
     errG2.backward()
-    gen2_optim.step()
+    genA2B_optim.step()
 
     #Update disc1
     disc1_optim.zero_grad()
-    real_output_A = disc1(data1)
+    real_output_A = disc1(dataA)
     loss_real_A = adversarial_loss(real_output_A,real_label)
-    fake_image_A = gen1(data2)
+    fake_image_A = genB2A(dataB)
     fake_output_A = disc1(fake_image_A)
     loss_fake_A = adversarial_loss(fake_output_A,fake_label)
     errD_A = (loss_real_A + loss_fake_A)/2
@@ -163,14 +163,15 @@ def train_step(
 
     #Update disc2
     disc2_optim.zero_grad()
-    real_output_B = disc2(data2)
+    real_output_B = disc2(dataB)
     loss_real_B = adversarial_loss(real_output_B,real_label)
-    fake_image_B = gen2(data1)
+    fake_image_B = genA2B(dataA)
     fake_output_B = disc2(fake_image_B)
     loss_fake_B = adversarial_loss(fake_output_B,fake_label)
     errD_B = (loss_real_B + loss_fake_B)/2
     errD_B.backward()
     disc2_optim.step()
+    
     return {
             "Loss D":errD_A.item() + errD_B.item(),
             "Loss G":errG1.item()+errG2.item(),

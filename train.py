@@ -26,8 +26,8 @@ dataset = ImageDataset(
 
 my_collate = lambda x: my_collate(x,dataset)
 dataloader = torch.utils.data.DataLoader(dataset,batch_size=BATCH_SIZE,shuffle=True,pin_memory=True,drop_last=True)
-gen1 = Generator(3,3,8).to(device)
-gen2 = Generator(3,3,8).to(device)
+gen1 = Generator(3,3,9).to(device)
+gen2 = Generator(3,3,9).to(device)
 disc1 = Discriminator(3).to(device)
 disc2 = Discriminator(3).to(device)
 
