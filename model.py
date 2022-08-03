@@ -122,16 +122,19 @@ def train_step(
     genB2A_optim.zero_grad()    
     identity_image_A = genB2A(dataA)
     loss_identity_A = identity_loss(identity_image_A,dataA) 
+    
     fake_image_A = genB2A(dataB)
     fake_output_A = disc1(fake_image_A)
-    
+    #
     real_label = 0.9*torch.ones_like(fake_output_A).to(device)
     fake_label = torch.zeros_like(fake_output_A).to(device)
-    
+    #
     loss_gan_1 = adversarial_loss(fake_output_A,real_label)
+    
     fake_image_B = genA2B(dataA)
     recovered_image_A = genB2A(fake_image_B)
     loss_cycle_A = cycle_loss(recovered_image_A,dataA) 
+    
     errG1 = loss_identity_A + loss_gan_1 + loss_cycle_A 
     errG1.backward()
     genB2A_optim.step()
@@ -140,12 +143,15 @@ def train_step(
     genA2B_optim.zero_grad()
     identity_image_B = genA2B(dataB)
     loss_identity_B = identity_loss(identity_image_B,dataB) 
+    
     fake_image_B = genA2B(dataA)
     fake_output_B = disc2(fake_image_B)
     loss_gan_2 = adversarial_loss(fake_output_B,real_label)
+    
     fake_image_A = genB2A(dataB)
     recovered_image_B = genA2B(fake_image_A)
     loss_cycle_B = cycle_loss(recovered_image_B,dataB) 
+    
     errG2 = loss_identity_B + loss_gan_2 + loss_cycle_B
     errG2.backward()
     genA2B_optim.step()

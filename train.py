@@ -20,7 +20,7 @@ dataset = ImageDataset(
     transform=transforms.Compose([
         transforms.Resize((WIDTH,HEIGHT)),
         transforms.ToTensor(),
-        transforms.Normalize((127.5, 127.5, 127.5), (127.5, 127.5, 127.5))
+        transforms.Normalize((.5, .5, .5), (.5, .5, .5))
         ]),
         unaligned=False,)
 
@@ -46,6 +46,10 @@ def train(epochs):
         for i,data in progress_bar:
             data1 = data["A"].to(device)
             data2 = data["B"].to(device)
+            #print(data1.detach().cpu().numpy().max())
+            #print(data1.detach().cpu().numpy().min())
+            #print(data2.detach().cpu().numpy().max())
+            #print(data2.detach().cpu().numpy().min())
             losses = train_step(
                 BATCH_SIZE,
                 gen1,
