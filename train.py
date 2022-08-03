@@ -33,7 +33,7 @@ disc2 = Discriminator(3).to(device)
 
 cycle_crit = nn.L1Loss().to(device)
 identity_crit = nn.L1Loss().to(device)
-adversarial_crit = nn.BCELoss().to(device)
+adversarial_crit = nn.BCEWithLogitsLoss().to(device)
 
 optG1 = torch.optim.Adam(gen1.parameters(),lr=LR,betas=(0.5,0.999))
 optG2 = torch.optim.Adam(gen2.parameters(),lr=LR,betas=(0.5,0.999))
