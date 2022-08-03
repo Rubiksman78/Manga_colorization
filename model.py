@@ -118,6 +118,31 @@ def train_step(
         device
         ):
     #data1 = A (Gray images), data2 = B (color images)
+    
+    #Update disc1
+    disc1_optim.zero_grad()
+    real_output_A = disc1(dataA)
+    loss_real_A = adversarial_loss(real_output_A,real_label)
+    loss_real_A.backward()
+    
+    fake_image_A = genB2A(dataB)
+    fake_output_A = disc1(fake_image_A)
+    loss_fake_A = adversarial_loss(fake_output_A,fake_label)
+    loss_fake_A.backward()
+    disc1_optim.step()
+
+    #Update disc2
+    disc2_optim.zero_grad()
+    real_output_B = disc2(dataB)
+    loss_real_B = adversarial_loss(real_output_B,real_label)
+    loss_real_B.backward()
+    
+    fake_image_B = genA2B(dataA)
+    fake_output_B = disc2(fake_image_B)
+    loss_fake_B = adversarial_loss(fake_output_B,fake_label)
+    loss_fake_B.backward()
+    disc2_optim.step()
+    
     #Update genB2A
     genB2A_optim.zero_grad()    
     identity_image_A = genB2A(dataA)
@@ -155,28 +180,6 @@ def train_step(
     errG2 = loss_identity_B + loss_gan_2 + loss_cycle_B
     errG2.backward()
     genA2B_optim.step()
-
-    #Update disc1
-    disc1_optim.zero_grad()
-    real_output_A = disc1(dataA)
-    loss_real_A = adversarial_loss(real_output_A,real_label)
-    fake_image_A = genB2A(dataB)
-    fake_output_A = disc1(fake_image_A)
-    loss_fake_A = adversarial_loss(fake_output_A,fake_label)
-    errD_A = (loss_real_A + loss_fake_A)/2
-    errD_A.backward()
-    disc1_optim.step()
-
-    #Update disc2
-    disc2_optim.zero_grad()
-    real_output_B = disc2(dataB)
-    loss_real_B = adversarial_loss(real_output_B,real_label)
-    fake_image_B = genA2B(dataA)
-    fake_output_B = disc2(fake_image_B)
-    loss_fake_B = adversarial_loss(fake_output_B,fake_label)
-    errD_B = (loss_real_B + loss_fake_B)/2
-    errD_B.backward()
-    disc2_optim.step()
     
     return {
             "Loss D_B2A":errD_A.item(),
