@@ -14,14 +14,14 @@ def my_collate(batch,dataset):
     return torch.utils.data.dataloader.default_collate(batch)
 
 #This function generates a batch of images from the generator 1 and 2 then plot them on a figure
-def plot_test(gen1,gen2,data1,data2,epoch):
+def plot_test(genB2A,genA2B,data1,data2,epoch):
     n = min(len(data1),6)
     fig = plt.figure(figsize=(12,12))
     data1 = data1[:n]
     data2 = data2[:n]
     for i in range(len(data1)):
-        im = data1[i]
-        fake_1 = gen1(im)*0.5+0.5
+        im = data2[i]
+        fake_1 = genB2A(im)*0.5+0.5
         fake_1 = fake_1.detach().cpu().numpy()
         im = im.detach().cpu().numpy()*0.5+0.5
         plt.subplot(n,2,2*i+1)
@@ -35,8 +35,8 @@ def plot_test(gen1,gen2,data1,data2,epoch):
     plt.close()
     fig = plt.figure(figsize=(12,12))
     for i in range(len(data2)):
-        im = data2[i]
-        fake_2 = gen2(im)*0.5+0.5
+        im = data1[i]
+        fake_2 = genA2B(im)*0.5+0.5
         fake_2 = fake_2.detach().cpu().numpy()
         im = im.detach().cpu().numpy()*0.5+0.5
         plt.subplot(n,2,2*i+1)

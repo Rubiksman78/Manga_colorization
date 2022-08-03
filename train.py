@@ -26,8 +26,8 @@ dataset = ImageDataset(
 
 my_collate = lambda x: my_collate(x,dataset)
 dataloader = torch.utils.data.DataLoader(dataset,batch_size=BATCH_SIZE,shuffle=True,pin_memory=True,drop_last=True)
-gen1 = Generator(3,3,9).to(device)
-gen2 = Generator(3,3,9).to(device)
+genB2A = Generator(3,3,9).to(device)
+genA2B = Generator(3,3,9).to(device)
 disc1 = Discriminator(3).to(device)
 disc2 = Discriminator(3).to(device)
 
@@ -35,8 +35,8 @@ cycle_crit = nn.L1Loss().to(device)
 identity_crit = nn.L1Loss().to(device)
 adversarial_crit = nn.BCEWithLogitsLoss().to(device)
 
-optG1 = torch.optim.Adam(gen1.parameters(),lr=LR,betas=(0.5,0.999))
-optG2 = torch.optim.Adam(gen2.parameters(),lr=LR,betas=(0.5,0.999))
+optG1 = torch.optim.Adam(genB2A.parameters(),lr=LR,betas=(0.5,0.999))
+optG2 = torch.optim.Adam(genA2B.parameters(),lr=LR,betas=(0.5,0.999))
 optD1 = torch.optim.Adam(disc1.parameters(),lr=LR,betas=(0.5,0.999))
 optD2 = torch.optim.Adam(disc2.parameters(),lr=LR,betas=(0.5,0.999))
 
@@ -52,8 +52,8 @@ def train(epochs):
             #print(data2.detach().cpu().numpy().min())
             losses = train_step(
                 BATCH_SIZE,
-                gen1,
-                gen2,
+                genB2A,
+                genA2B,
                 disc1,
                 disc2,
                 data1,
@@ -101,9 +101,9 @@ def train(epochs):
                 "Gan_Loss_A2B":gan_loss_A2B}
             progress_bar.set_postfix({k:f"{v:.4f}" for k,v in dict.items()})
             wandb.log(dict)
-        plot_test(gen1,gen2,data1,data2,epoch)
-        torch.save(gen1.state_dict(),f"weights/gen1_{epoch+1}.pt")
-        torch.save(gen2.state_dict(),f"weights/gen2_{epoch+1}.pt")
+        plot_test(genB2A,genA2B,data1,data2,epoch)
+        torch.save(genB2A.state_dict(),f"weights/gen1_{epoch+1}.pt")
+        torch.save(genA2B.state_dict(),f"weights/gen2_{epoch+1}.pt")
         torch.save(disc1.state_dict(),f"weights/disc1_{epoch+1}.pt")
         torch.save(disc2.state_dict(),f"weights/disc2_{epoch+1}.pt")
 
