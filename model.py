@@ -119,6 +119,13 @@ def train_step(
         ):
     #data1 = A (Gray images), data2 = B (color images)
     
+    fake_image_A = genB2A(dataB)
+    fake_output_A = disc1(fake_image_A)
+    #
+    real_label = 0.9*torch.ones_like(fake_output_A).to(device)
+    fake_label = torch.zeros_like(fake_output_A).to(device)
+    #
+    
     #Update disc1
     disc1_optim.zero_grad()
     real_output_A = disc1(dataA)
@@ -129,6 +136,7 @@ def train_step(
     fake_output_A = disc1(fake_image_A)
     loss_fake_A = adversarial_loss(fake_output_A,fake_label)
     loss_fake_A.backward()
+    errD_A = 0.5*(loss_real_A + loss_fake_A)
     disc1_optim.step()
 
     #Update disc2
@@ -141,6 +149,7 @@ def train_step(
     fake_output_B = disc2(fake_image_B)
     loss_fake_B = adversarial_loss(fake_output_B,fake_label)
     loss_fake_B.backward()
+    errD_B = 0.5*(loss_real_B + loss_fake_B)
     disc2_optim.step()
     
     #Update genB2A
