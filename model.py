@@ -125,7 +125,7 @@ def train_step(
     fake_image_A = genB2A(dataB)
     fake_output_A = disc1(fake_image_A)
     
-    real_label = torch.ones_like(fake_output_A).to(device)
+    real_label = 0.9*torch.ones_like(fake_output_A).to(device)
     fake_label = torch.zeros_like(fake_output_A).to(device)
     
     loss_gan_1 = adversarial_loss(fake_output_A,real_label)

@@ -46,7 +46,22 @@ def train(epochs):
         for i,data in progress_bar:
             data1 = data["A"].to(device)
             data2 = data["B"].to(device)
-            losses = train_step(BATCH_SIZE,gen1,gen2,disc1,disc2,data1,data2,optG1,optG2,optD1,optD2,cycle_crit,identity_crit,adversarial_crit,device)
+            losses = train_step(
+                BATCH_SIZE,
+                gen1,
+                gen2,
+                disc1,
+                disc2,
+                data1,
+                data2,
+                optG1,
+                optG2,
+                optD1,
+                optD2,
+                cycle_crit,
+                identity_crit,
+                adversarial_crit,
+                device)
             (disc_loss_B2A,
              disc_loss_A2B,
              gen_loss_B2A,
@@ -69,7 +84,17 @@ def train(epochs):
             #disc_loss,gen_loss,identity_loss,gan_loss,cycle_loss = losses["Loss D"],losses["Loss G"],losses["Loss Identity"],losses["Loss Gan"],losses["Loss Cycle"]
             progress_bar.set_description(f"Epoch {epoch+1}/{epochs}")
             #dict = {"Discriminator_Loss":disc_loss,"Generator_Loss":gen_loss,"Identity_Loss":identity_loss,"Gan_Loss":gan_loss,"Cycle_Loss":cycle_loss}
-            dict = {"Discriminator_Loss_B2A":disc_loss_B2A,"Discriminator_Loss_A2B":disc_loss_A2B,"Generator_Loss_B2A":gen_loss_B2A,"Generator_Loss_A2B":gen_loss_A2B,"Cycle_Loss_B2A":cycle_loss_B2A,"Cycle_Loss_A2B":cycle_loss_A2B,"Identity_Loss_B2A":identity_loss_B2A,"Identity_Loss_A2B":identity_loss_A2B,"Gan_Loss_B2A":gan_loss_B2A,"Gan_Loss_A2B":gan_loss_A2B}
+            dict = {
+                "Discriminator_Loss_B2A":disc_loss_B2A,
+                "Discriminator_Loss_A2B":disc_loss_A2B,
+                "Generator_Loss_B2A":gen_loss_B2A,
+                "Generator_Loss_A2B":gen_loss_A2B,
+                "Cycle_Loss_B2A":cycle_loss_B2A,
+                "Cycle_Loss_A2B":cycle_loss_A2B,
+                "Identity_Loss_B2A":identity_loss_B2A,
+                "Identity_Loss_A2B":identity_loss_A2B,
+                "Gan_Loss_B2A":gan_loss_B2A,
+                "Gan_Loss_A2B":gan_loss_A2B}
             progress_bar.set_postfix({k:f"{v:.4f}" for k,v in dict.items()})
             wandb.log(dict)
         plot_test(gen1,gen2,data1,data2,epoch)
