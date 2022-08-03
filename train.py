@@ -20,7 +20,7 @@ dataset = ImageDataset(
     transform=transforms.Compose([
         transforms.Resize((WIDTH,HEIGHT)),
         transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        transforms.Normalize((127.5, 127.5, 127.5), (127.5, 127.5, 127.5))
         ]),
         unaligned=False,)
 
