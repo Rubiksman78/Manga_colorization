@@ -118,7 +118,7 @@ def train_step(
         device
         ):
     #data1 = A (Gray images), data2 = B (color images)
-    #Update gen1
+    #Update genB2A
     genB2A_optim.zero_grad()    
     identity_image_A = genB2A(dataA)
     loss_identity_A = identity_loss(identity_image_A,dataA) 
@@ -136,7 +136,7 @@ def train_step(
     errG1.backward()
     genB2A_optim.step()
     
-    #Update gen2
+    #Update genA2B
     genA2B_optim.zero_grad()
     identity_image_B = genA2B(dataB)
     loss_identity_B = identity_loss(identity_image_B,dataB) 
@@ -173,9 +173,14 @@ def train_step(
     disc2_optim.step()
     
     return {
-            "Loss D":errD_A.item() + errD_B.item(),
-            "Loss G":errG1.item()+errG2.item(),
-            "Loss Identity":loss_identity_A.item() + loss_identity_B.item(),
-            "Loss Gan":loss_gan_1.item() + loss_gan_2.item(),
-            "Loss Cycle":loss_cycle_A.item() + loss_cycle_B.item()
+            "Loss D_B2A":errD_A.item(),
+            "Loss D_A2B":errD_B.item(),
+            "Loss G_B2A":errG1.item(),
+            "Loss G_A2B":errG2.item(),
+            "Loss Identity_B2A":loss_identity_A.item(),
+            "Loss Identity_A2B":loss_identity_B.item(),
+            "Loss Cycle_B2A":loss_cycle_A.item(),
+            "Loss Cycle_A2B":loss_cycle_B.item(),
+            "Loss Gan_B2A":loss_gan_1.item(),
+            "Loss Gan_A2B":loss_gan_2.item()
             }
