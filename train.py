@@ -44,8 +44,8 @@ def train(epochs):
     for epoch in range(epochs):
         progress_bar = tqdm(enumerate(dataloader),total=len(dataloader))
         for i,data in progress_bar:
-            data1 = data["A"].to(device)
-            data2 = data["B"].to(device)
+            data1 = data["B"].to(device)
+            data2 = data["A"].to(device)
             #print(data1.detach().cpu().numpy().max())
             #print(data1.detach().cpu().numpy().min())
             #print(data2.detach().cpu().numpy().max())
