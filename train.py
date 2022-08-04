@@ -74,18 +74,17 @@ def train(epochs):
         for scheduler in schedulers:
             scheduler.step()
         if epoch % SAVE_INTERVALL == 0:
-            torch.save(genB2A.state_dict(),f"weights/gen1_{epoch+1}.pt")
-            torch.save(genA2B.state_dict(),f"weights/gen2_{epoch+1}.pt")
-            torch.save(disc1.state_dict(),f"weights/disc1_{epoch+1}.pt")
-            torch.save(disc2.state_dict(),f"weights/disc2_{epoch+1}.pt")
+            torch.save(genB2A.state_dict(),f"weights/{ID}/gen1_{epoch+1}.pt")
+            torch.save(genA2B.state_dict(),f"weights/{ID}/gen2_{epoch+1}.pt")
+            torch.save(disc1.state_dict(),f"weights/{ID}/disc1_{epoch+1}.pt")
+            torch.save(disc2.state_dict(),f"weights/{ID}/disc2_{epoch+1}.pt")
             plot_test(genB2A,genA2B,data1,data2,epoch,n_gen=4,save=True)
-
-    
+            
 def infer(data1,data2,n_gen,checkpoint=180):
     genB2A = Generator(3,3,N_RESNET)
     genA2B = Generator(3,3,N_RESNET)
-    genB2A.load_state_dict(torch.load(f"weights/gen1_{checkpoint}.pt",map_location=torch.device("cpu")))
-    genA2B.load_state_dict(torch.load(f"weights/gen2_{checkpoint}.pt",map_location=torch.device("cpu")))
+    genB2A.load_state_dict(torch.load(f"weights/{ID}/gen1_{checkpoint}.pt",map_location=torch.device("cpu")))
+    genA2B.load_state_dict(torch.load(f"weights/{ID}/gen2_{checkpoint}.pt",map_location=torch.device("cpu")))
     plot_test(genB2A,genA2B,data1,data2,0,n_gen,save=False)
     
 if __name__ == "__main__":
@@ -102,7 +101,8 @@ if __name__ == "__main__":
      SAVE_INTERVALL,
      N_RESNET,
      CYCLE_WEIGHT,
-     ID_WEIGHT) = (DEFAULT_CONFIG["WIDTH"],
+     ID_WEIGHT,
+     ID) = (DEFAULT_CONFIG["WIDTH"],
                     DEFAULT_CONFIG["HEIGHT"],
                     DEFAULT_CONFIG["BATCH_SIZE"],
                     DEFAULT_CONFIG["LR"],
@@ -111,7 +111,8 @@ if __name__ == "__main__":
                     DEFAULT_CONFIG["SAVE_INTERVALL"],
                     DEFAULT_CONFIG["N_RESNET"],
                     DEFAULT_CONFIG["CYCLE_WEIGHT"],
-                    DEFAULT_CONFIG["ID_WEIGHT"])
+                    DEFAULT_CONFIG["ID_WEIGHT"],
+                    DEFAULT_CONFIG["ID"])
 
     dataset = ImageDataset(
         DATASET, 
@@ -122,6 +123,8 @@ if __name__ == "__main__":
             ]),
             unaligned=False,)
 
+    create_folders_id(f"weights/{ID}")
+    create_folders_id(f"results/{ID}")
     dataloader = torch.utils.data.DataLoader(dataset,batch_size=BATCH_SIZE,shuffle=True,pin_memory=True,drop_last=True)
     genB2A = Generator(3,3,N_RESNET).to(device)
     genA2B = Generator(3,3,N_RESNET).to(device)
@@ -136,10 +139,10 @@ if __name__ == "__main__":
     optG2 = torch.optim.Adam(genA2B.parameters(),lr=LR,betas=(0.5,0.999))
     optD1 = torch.optim.Adam(disc1.parameters(),lr=LR,betas=(0.5,0.999))
     optD2 = torch.optim.Adam(disc2.parameters(),lr=LR,betas=(0.5,0.999))
-    schedulers = [torch.optim.lr_scheduler.StepLR(optG1,gamma=0.9),
-                  torch.optim.lr_scheduler.StepLR(optG2,gamma=0.9),
-                  torch.optim.lr_scheduler.StepLR(optD1,gamma=0.9),
-                  torch.optim.lr_scheduler.StepLR(optD2,gamma=0.9)]
+    schedulers = [torch.optim.lr_scheduler.ExponentialLR(optG1,gamma=0.9),
+                  torch.optim.lr_scheduler.ExponentialLR(optG2,gamma=0.9),
+                  torch.optim.lr_scheduler.ExponentialLR(optD1,gamma=0.9),
+                  torch.optim.lr_scheduler.ExponentialLR(optD2,gamma=0.9)]
     train(EPOCHS)
     iter_data = next(iter(dataloader))
     data_A = iter_data["A"]

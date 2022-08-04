@@ -1,6 +1,6 @@
 DEFAULT_CONFIG = {
     "WIDTH":400,
-    "HEIGHT":254,
+    "HEIGHT":252,
     "BATCH_SIZE":1,
     "LR":2e-3,
     "DATASET":"image_data",
@@ -10,4 +10,5 @@ DEFAULT_CONFIG = {
     "N_RESNET":9,
     "CYCLE_WEIGHT":10,
     "ID_WEIGHT":0.5,
+    "ID":0
 }
