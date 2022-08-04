@@ -115,7 +115,9 @@ def train_step(
         cycle_loss,
         identity_loss,
         adversarial_loss,
-        device
+        device,
+        cycle_weight,
+        id_weight
         ):
     #data1 = A (Gray images), data2 = B (color images)
     
@@ -169,7 +171,7 @@ def train_step(
     recovered_image_A = genB2A(fake_image_B)
     loss_cycle_A = cycle_loss(recovered_image_A,dataA) 
     
-    errG1 = loss_identity_A + loss_gan_1 + loss_cycle_A 
+    errG1 = id_weight * loss_identity_A + loss_gan_1 + cycle_weight * loss_cycle_A 
     errG1.backward()
     genB2A_optim.step()
     
@@ -186,7 +188,7 @@ def train_step(
     recovered_image_B = genA2B(fake_image_A)
     loss_cycle_B = cycle_loss(recovered_image_B,dataB) 
     
-    errG2 = loss_identity_B + loss_gan_2 + loss_cycle_B
+    errG2 = id_weight * loss_identity_B + loss_gan_2 + cycle_weight * loss_cycle_B
     errG2.backward()
     genA2B_optim.step()
     

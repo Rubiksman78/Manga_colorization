@@ -34,7 +34,9 @@ def train(epochs):
                 cycle_crit,
                 identity_crit,
                 adversarial_crit,
-                device)
+                device,
+                cycle_weight=CYCLE_WEIGHT,
+                id_weight=ID_WEIGHT)
             (disc_loss_B2A,
              disc_loss_A2B,
              gen_loss_B2A,
@@ -69,6 +71,8 @@ def train(epochs):
             progress_bar.set_postfix({k:f"{v:.4f}" for k,v in dict.items()})
             wandb.log(dict)
         plot_test(genB2A,genA2B,data1,data2,epoch,n_gen=4,save=False)
+        for scheduler in schedulers:
+            scheduler.step()
         if epoch % SAVE_INTERVALL == 0:
             torch.save(genB2A.state_dict(),f"weights/gen1_{epoch+1}.pt")
             torch.save(genA2B.state_dict(),f"weights/gen2_{epoch+1}.pt")
@@ -96,14 +100,18 @@ if __name__ == "__main__":
      DATASET,
      EPOCHS,
      SAVE_INTERVALL,
-     N_RESNET) = (DEFAULT_CONFIG["WIDTH"],
+     N_RESNET,
+     CYCLE_WEIGHT,
+     ID_WEIGHT) = (DEFAULT_CONFIG["WIDTH"],
                     DEFAULT_CONFIG["HEIGHT"],
                     DEFAULT_CONFIG["BATCH_SIZE"],
                     DEFAULT_CONFIG["LR"],
                     DEFAULT_CONFIG["DATASET"],
                     DEFAULT_CONFIG["EPOCHS"],
                     DEFAULT_CONFIG["SAVE_INTERVALL"],
-                    DEFAULT_CONFIG["N_RESNET"])
+                    DEFAULT_CONFIG["N_RESNET"],
+                    DEFAULT_CONFIG["CYCLE_WEIGHT"],
+                    DEFAULT_CONFIG["ID_WEIGHT"])
 
     dataset = ImageDataset(
         DATASET, 
@@ -128,6 +136,10 @@ if __name__ == "__main__":
     optG2 = torch.optim.Adam(genA2B.parameters(),lr=LR,betas=(0.5,0.999))
     optD1 = torch.optim.Adam(disc1.parameters(),lr=LR,betas=(0.5,0.999))
     optD2 = torch.optim.Adam(disc2.parameters(),lr=LR,betas=(0.5,0.999))
+    schedulers = [torch.optim.lr_scheduler.StepLR(optG1,gamma=0.9),
+                  torch.optim.lr_scheduler.StepLR(optG2,gamma=0.9),
+                  torch.optim.lr_scheduler.StepLR(optD1,gamma=0.9),
+                  torch.optim.lr_scheduler.StepLR(optD2,gamma=0.9)]
     train(EPOCHS)
     iter_data = next(iter(dataloader))
     data_A = iter_data["A"]
