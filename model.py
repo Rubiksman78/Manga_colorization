@@ -8,7 +8,7 @@ WIDTH,HEIGHT = DEFAULT_CONFIG["WIDTH"],DEFAULT_CONFIG["HEIGHT"]
 print_model = DEFAULT_CONFIG["PRINT_MODEL"]
 
 class Discriminator(nn.Module):
-    def __init__(self,input_nc,ndf=64,n_layers=3,norm_layer=nn.BatchNorm2d,use_sigmoid = False):
+    def __init__(self,input_nc,ndf=64,n_layers=5,norm_layer=nn.InstanceNorm2d,use_sigmoid = False):
         super(Discriminator, self).__init__()
         kw = 4
         padw = 1
