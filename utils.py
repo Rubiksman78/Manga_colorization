@@ -14,8 +14,8 @@ def my_collate(batch,dataset):
     return torch.utils.data.dataloader.default_collate(batch)
 
 #This function generates a batch of images from the generator 1 and 2 then plot them on a figure
-def plot_test(genB2A,genA2B,data1,data2,epoch):
-    n = min(len(data1),6)
+def plot_test(genB2A,genA2B,data1,data2,epoch,n_gen=6,save=True):
+    n = min(len(data1),n_gen)
     fig = plt.figure(figsize=(12,12))
     data1 = data1[:n]
     data2 = data2[:n]
@@ -30,9 +30,13 @@ def plot_test(genB2A,genA2B,data1,data2,epoch):
         plt.subplot(n,2,2*i+2)
         plt.imshow(fake_1.transpose(1,2,0))
         plt.axis("off")
-    wandb.log({"Grey_images": plt})
-    plt.savefig(f"results/{epoch+1}.png")
-    plt.close()
+    if save:
+        wandb.log({"Grey_images": plt})
+        plt.savefig(f"results/{epoch+1}.png")
+        plt.close()
+    else:
+        wandb.log({"Grey_images": plt})
+        plt.show()
     fig = plt.figure(figsize=(12,12))
     for i in range(len(data2)):
         im = data1[i]
@@ -45,7 +49,11 @@ def plot_test(genB2A,genA2B,data1,data2,epoch):
         plt.subplot(n,2,2*i+2)
         plt.imshow(fake_2.transpose(1,2,0))
         plt.axis("off")
-    wandb.log({"Color_images": plt})
-    plt.savefig(f"results/{epoch+1}_2.png")
-    plt.close()
-    
+    if save:
+        wandb.log({"Color_images": plt})
+        plt.savefig(f"results/{epoch+1}_2.png")
+        plt.close()
+    else:
+        wandb.log({"Color_images": plt})
+        plt.show()
+

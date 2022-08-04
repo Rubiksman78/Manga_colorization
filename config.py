@@ -1,9 +1,11 @@
 DEFAULT_CONFIG = {
-    "WIDTH":64,
-    "HEIGHT":64,
+    "WIDTH":400,
+    "HEIGHT":254,
     "BATCH_SIZE":1,
     "LR":2e-3,
     "DATASET":"image_data",
     "EPOCHS":100,
     "PRINT_MODEL":True,
+    "SAVE_INTERVALL":10,
+    "N_RESNET":9
 }
