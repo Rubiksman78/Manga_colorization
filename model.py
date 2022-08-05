@@ -143,17 +143,18 @@ def train_step(
     disc1_optim.step()
     """
     #Update disc2
-    disc2_optim.zero_grad()
-    real_output_B = disc2(dataB)
-    loss_real_B = adversarial_loss(real_output_B,real_label)
-    loss_real_B.backward()
-    
-    fake_image_B = genA2B(dataA)
-    fake_output_B = disc2(fake_image_B)
-    loss_fake_B = adversarial_loss(fake_output_B,fake_label)
-    loss_fake_B.backward()
-    errD_B = 0.5*(loss_real_B + loss_fake_B)
-    disc2_optim.step()
+    for i in range(3):
+        disc2_optim.zero_grad()
+        real_output_B = disc2(dataB)
+        loss_real_B = adversarial_loss(real_output_B,real_label)
+        loss_real_B.backward()
+        
+        fake_image_B = genA2B(dataA)
+        fake_output_B = disc2(fake_image_B)
+        loss_fake_B = adversarial_loss(fake_output_B,fake_label)
+        loss_fake_B.backward()
+        errD_B = 0.5*(loss_real_B + loss_fake_B)
+        disc2_optim.step()
     """
     #Update genB2A
     genB2A_optim.zero_grad()    

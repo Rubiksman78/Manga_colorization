@@ -11,10 +11,14 @@ import wandb
 
 def train(epochs):
     for epoch in range(epochs):
+        noise_var = 0.1
         progress_bar = tqdm(enumerate(dataloader),total=len(dataloader))
         for _,data in progress_bar:
             data1 = data["A"].to(device)
             data2 = data["B"].to(device)
+            data1 = data1 + torch.randn_like(data1)*noise_var
+            data2 = data2 + torch.randn_like(data2)*noise_var
+            noise_var = noise_var*0.99
             #print(data1.detach().cpu().numpy().max())
             #print(data1.detach().cpu().numpy().min())
             #print(data2.detach().cpu().numpy().max())
