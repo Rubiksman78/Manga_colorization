@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 from torchsummary import summary
 from config import DEFAULT_CONFIG
+import torchvision
 
 WIDTH,HEIGHT = DEFAULT_CONFIG["WIDTH"],DEFAULT_CONFIG["HEIGHT"]
 print_model = DEFAULT_CONFIG["PRINT_MODEL"]
@@ -127,7 +128,7 @@ def train_step(
     real_label = 0.9*torch.ones_like(fake_output_A).to(device)
     fake_label = torch.zeros_like(fake_output_A).to(device)
     #
-    
+    """
     #Update disc1
     disc1_optim.zero_grad()
     real_output_A = disc1(dataA)
@@ -140,7 +141,7 @@ def train_step(
     loss_fake_A.backward()
     errD_A = 0.5*(loss_real_A + loss_fake_A)
     disc1_optim.step()
-
+    """
     #Update disc2
     disc2_optim.zero_grad()
     real_output_B = disc2(dataB)
@@ -153,7 +154,7 @@ def train_step(
     loss_fake_B.backward()
     errD_B = 0.5*(loss_real_B + loss_fake_B)
     disc2_optim.step()
-    
+    """
     #Update genB2A
     genB2A_optim.zero_grad()    
     identity_image_A = genB2A(dataA)
@@ -174,7 +175,7 @@ def train_step(
     errG1 = id_weight * loss_identity_A + loss_gan_1 + cycle_weight * loss_cycle_A 
     errG1.backward()
     genB2A_optim.step()
-    
+    """
     #Update genA2B
     genA2B_optim.zero_grad()
     identity_image_B = genA2B(dataB)
@@ -184,7 +185,8 @@ def train_step(
     fake_output_B = disc2(fake_image_B)
     loss_gan_2 = adversarial_loss(fake_output_B,real_label)
     
-    fake_image_A = genB2A(dataB)
+    #fake_image_A = genB2A(dataB)
+    fake_image_A = torchvision.transforms.functional.rgb_to_grayscale(dataB, num_output_channels=3)
     recovered_image_B = genA2B(fake_image_A)
     loss_cycle_B = cycle_loss(recovered_image_B,dataB) 
     
@@ -192,6 +194,7 @@ def train_step(
     errG2.backward()
     genA2B_optim.step()
     
+    errD_A,errG1,loss_identity_A,loss_cycle_A,loss_gan_1 = 0,0,0,0,0
     return {
             "Loss D_B2A":errD_A.item(),
             "Loss D_A2B":errD_B.item(),
