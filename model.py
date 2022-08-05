@@ -196,14 +196,14 @@ def train_step(
     
     errD_A,errG1,loss_identity_A,loss_cycle_A,loss_gan_1 = 0,0,0,0,0
     return {
-            "Loss D_B2A":errD_A.item(),
+            "Loss D_B2A":errD_A,
             "Loss D_A2B":errD_B.item(),
-            "Loss G_B2A":errG1.item(),
+            "Loss G_B2A":errG1,
             "Loss G_A2B":errG2.item(),
-            "Loss Identity_B2A":loss_identity_A.item(),
+            "Loss Identity_B2A":loss_identity_A,
             "Loss Identity_A2B":loss_identity_B.item(),
-            "Loss Cycle_B2A":loss_cycle_A.item(),
+            "Loss Cycle_B2A":loss_cycle_A,
             "Loss Cycle_A2B":loss_cycle_B.item(),
-            "Loss Gan_B2A":loss_gan_1.item(),
+            "Loss Gan_B2A":loss_gan_1,
             "Loss Gan_A2B":loss_gan_2.item()
             }

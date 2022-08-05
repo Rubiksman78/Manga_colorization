@@ -88,7 +88,6 @@ def infer(data1,data2,n_gen,checkpoint=180):
     plot_test(genB2A,genA2B,data1,data2,0,n_gen,save=False)
     
 if __name__ == "__main__":
-    wandb.init(project='Manga_color',config=DEFAULT_CONFIG,name='test1',mode='disabled')
     ImageFile.LOAD_TRUNCATED_IMAGES = True
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -113,7 +112,8 @@ if __name__ == "__main__":
                     DEFAULT_CONFIG["CYCLE_WEIGHT"],
                     DEFAULT_CONFIG["ID_WEIGHT"],
                     DEFAULT_CONFIG["ID"])
-
+     
+    wandb.init(project='Manga_color',config=DEFAULT_CONFIG,name=f"test{ID}",mode='disabled')
     dataset = ImageDataset(
         DATASET, 
         transform=transforms.Compose([
