@@ -5,6 +5,7 @@ Chapter 204, it's time for the final confession (and the story finally ends !). 
 
 This repo aims to colorize your favorite manga without denaturing the art and with enough consistency during the story.
 It uses a Cycle-GAN base approach trained on unpaired images of grayshade and color manga panels.
+An implementation with Pix2Pix Generator (ResNet and Unet) is also proposed to improve results. The obtention of paired images is simply done by grayscaling colored manga panels for simplicity and language coherence in text bubbles.
 
 ## Installation
 
