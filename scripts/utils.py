@@ -4,6 +4,7 @@ import numpy as np
 import wandb
 from config import DEFAULT_CONFIG
 import os
+
 def my_collate(batch,dataset):
     len_batch = len(batch) # original batch length
     batch = list(filter (lambda x:x is not None, batch)) # filter out all the Nones

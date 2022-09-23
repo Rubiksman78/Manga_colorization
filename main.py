@@ -1,14 +1,14 @@
-from dataset import ImageDataset
-from cyclegan import *
+from scripts.dataset import ImageDataset
+from networks.cyclegan import *
 import torchvision.transforms as transforms
 import torch
 import torch.nn as nn
 from tqdm import tqdm
 from PIL import ImageFile
 from config import DEFAULT_CONFIG
-from utils import *
+from scripts.utils import *
 import wandb 
-from train import train_cycle_gan,infer, train_pixpix
+from scripts.train import train_cycle_gan,infer, train_pixpix
 from networks.perceptual_loss import VGGPerceptualLoss
 
 if __name__ == "__main__":

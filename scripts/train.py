@@ -1,9 +1,9 @@
-from cyclegan import *
+from networks.cyclegan import *
 import torch
 from tqdm import tqdm
 from utils import *
 import wandb 
-from pix2pix import *
+from networks.pix2pix import *
 
 (WIDTH,
 HEIGHT,

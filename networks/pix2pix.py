@@ -1,47 +1,11 @@
-from turtle import width
 import torch 
 import torch.nn as nn
 from torchsummary import summary
 from config import DEFAULT_CONFIG
-import torchvision
+from disc_net import Discriminator
 
 WIDTH,HEIGHT = DEFAULT_CONFIG["WIDTH"],DEFAULT_CONFIG["HEIGHT"]
 print_model = DEFAULT_CONFIG["PRINT_MODEL"]
-
-class Discriminator(nn.Module):
-    def __init__(self,input_nc,ndf=64,n_layers=5,norm_layer=nn.InstanceNorm2d,use_sigmoid = False):
-        super(Discriminator, self).__init__()
-        kw = 4
-        padw = 1
-        sequence = [
-            nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=2, padding=padw),
-            nn.LeakyReLU(0.2, True)
-        ]
-        nf_mult = 1
-        nf_mult_prev = 1
-        for n in range(1, n_layers):
-            nf_mult_prev = nf_mult
-            nf_mult = min(2**n, 8)
-            sequence += [
-                nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult, kernel_size=kw, stride=2, padding=padw, bias=False),
-                norm_layer(ndf * nf_mult),
-                nn.LeakyReLU(0.2, True)
-            ]
-        nf_mult_prev = nf_mult
-        nf_mult = min(2**n_layers, 8)
-        sequence += [
-            nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult, kernel_size=kw, stride=1, padding=padw, bias=False),
-            norm_layer(ndf * nf_mult),
-            nn.LeakyReLU(0.2, True)
-        ]
-        sequence += [nn.Conv2d(ndf * nf_mult, 1, kernel_size=kw, stride=1, padding=padw)]
-        self.model = nn.Sequential(*sequence)
-        
-        if use_sigmoid:
-            self.model.add_module('sigmoid', nn.Sigmoid())
-            
-    def forward(self, input):
-        return self.model(input)
        
 class Resnet_Block(nn.Module):
     def __init__(self,n_filters):
@@ -101,40 +65,46 @@ if print_model:
     dis = Discriminator(3).to(device)
     print(summary(dis,(3,HEIGHT,WIDTH)))
 
-def train_step_pix2pix(
-        gen,
-        disc,
-        dataA,
-        dataB,
-        gen_opt,
-        disc_opt,
-        adv_loss,
-        feat_loss,
-        device,
-        feat_weight,
-        ):
-    gen_opt.zero_grad()
-    b_generated = gen(dataA)
-    b_generated_score = disc(b_generated)
-    real_labels = torch.ones(b_generated_score.size()).to(device)
-    adversial_loss =  adv_loss(b_generated_score,real_labels)
-    feature_loss = feat_loss(b_generated,dataB) * feat_weight
-    gen_loss = adversial_loss + feature_loss
-    gen_loss.backward()
-    gen_opt.step()
+class ResNetPix2Pix:
+    def __init__(self,lr=0.0002,beta1=0.5,beta2=0.999):
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.generator = Generator(3,3,n_resnet=9).to(self.device)
+        self.discriminator = Discriminator(3).to(self.device)
 
-    disc_opt.zero_grad()
-    b_real = dataB
-    b_real_score = disc(b_real)
-    b_generated = gen(dataA)
-    b_generated_score = disc(b_generated)
-    fake_labels = torch.zeros(b_generated_score.size()).to(device)
-    real_labels = torch.ones(b_real_score.size()).to(device)
-    disc_loss =  adv_loss(b_generated_score,fake_labels) + adv_loss(b_real_score,real_labels)
-    disc_loss.backward()
-    disc_opt.step()
+    def train_step_pix2pix(
+            gen,
+            disc,
+            dataA,
+            dataB,
+            gen_opt,
+            disc_opt,
+            adv_loss,
+            feat_loss,
+            device,
+            feat_weight,
+            ):
+        gen_opt.zero_grad()
+        b_generated = gen(dataA)
+        b_generated_score = disc(b_generated)
+        real_labels = torch.ones(b_generated_score.size()).to(device)
+        adversial_loss =  adv_loss(b_generated_score,real_labels)
+        feature_loss = feat_loss(b_generated,dataB) * feat_weight
+        gen_loss = adversial_loss + feature_loss
+        gen_loss.backward()
+        gen_opt.step()
 
-    return adversial_loss.item(), feature_loss.item(), disc_loss.item()
+        disc_opt.zero_grad()
+        b_real = dataB
+        b_real_score = disc(b_real)
+        b_generated = gen(dataA)
+        b_generated_score = disc(b_generated)
+        fake_labels = torch.zeros(b_generated_score.size()).to(device)
+        real_labels = torch.ones(b_real_score.size()).to(device)
+        disc_loss =  adv_loss(b_generated_score,fake_labels) + adv_loss(b_real_score,real_labels)
+        disc_loss.backward()
+        disc_opt.step()
+
+        return adversial_loss.item(), feature_loss.item(), disc_loss.item()
 
 
 
