@@ -95,11 +95,13 @@ class Generator(nn.Module):
         return self.model(x)
 
 if print_model:
+    """
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     gen = Generator(3,3,n_resnet=9).to(device)
     print(summary(gen,(3,HEIGHT,WIDTH)))
     dis = Discriminator(3).to(device)
     print(summary(dis,(3,HEIGHT,WIDTH)))
+    """
 
 def train_step(
         batch_size,

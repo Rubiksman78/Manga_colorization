@@ -1,15 +1,48 @@
-from dataset import ImageDataset
-from model import *
-import torchvision.transforms as transforms
+from cyclegan import *
 import torch
-import torch.nn as nn
 from tqdm import tqdm
-from PIL import ImageFile
-from config import DEFAULT_CONFIG
 from utils import *
 import wandb 
+from pix2pix import *
 
-def train(epochs):
+(WIDTH,
+HEIGHT,
+BATCH_SIZE,
+LR,
+DATASET,
+EPOCHS,
+SAVE_INTERVALL,
+N_RESNET,
+CYCLE_WEIGHT,
+ID_WEIGHT,
+ID) = (DEFAULT_CONFIG["WIDTH"],
+            DEFAULT_CONFIG["HEIGHT"],
+            DEFAULT_CONFIG["BATCH_SIZE"],
+            DEFAULT_CONFIG["LR"],
+            DEFAULT_CONFIG["DATASET"],
+            DEFAULT_CONFIG["EPOCHS"],
+            DEFAULT_CONFIG["SAVE_INTERVALL"],
+            DEFAULT_CONFIG["N_RESNET"],
+            DEFAULT_CONFIG["CYCLE_WEIGHT"],
+            DEFAULT_CONFIG["ID_WEIGHT"],
+            DEFAULT_CONFIG["ID"])
+            
+def train_cycle_gan(
+        epochs,
+        dataloader,
+        genB2A,
+        genA2B,
+        disc1,
+        disc2,
+        cycle_crit,
+        identity_crit,
+        adversarial_crit,
+        optG1,
+        optG2,
+        optD1,
+        optD2,
+        schedulers
+        ):
     for epoch in range(epochs):
         noise_var = 0.1
         progress_bar = tqdm(enumerate(dataloader),total=len(dataloader))
@@ -19,10 +52,6 @@ def train(epochs):
             data1 = data1 + torch.randn_like(data1)*noise_var
             data2 = data2 + torch.randn_like(data2)*noise_var
             noise_var = noise_var*0.99
-            #print(data1.detach().cpu().numpy().max())
-            #print(data1.detach().cpu().numpy().min())
-            #print(data2.detach().cpu().numpy().max())
-            #print(data2.detach().cpu().numpy().min())
             losses = train_step(
                 BATCH_SIZE,
                 genB2A,
@@ -84,71 +113,58 @@ def train(epochs):
             torch.save(disc2.state_dict(),f"weights/{ID}/disc2_{epoch+1}.pt")
             plot_test(genB2A,genA2B,data1,data2,epoch,n_gen=4,save=True)
             
-def infer(data1,data2,n_gen,checkpoint=180):
+def infer(data1,data2,n_gen,checkpoint=11):
     genB2A = Generator(3,3,N_RESNET)
     genA2B = Generator(3,3,N_RESNET)
-    genB2A.load_state_dict(torch.load(f"weights/{ID}/gen1_{checkpoint}.pt",map_location=torch.device("cpu")))
+    #genB2A.load_state_dict(torch.load(f"weights/{ID}/gen1_{checkpoint}.pt",map_location=torch.device("cpu")))
     genA2B.load_state_dict(torch.load(f"weights/{ID}/gen2_{checkpoint}.pt",map_location=torch.device("cpu")))
     plot_test(genB2A,genA2B,data1,data2,0,n_gen,save=False)
     
-if __name__ == "__main__":
-    ImageFile.LOAD_TRUNCATED_IMAGES = True
-
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    (WIDTH,
-     HEIGHT,
-     BATCH_SIZE,
-     LR,
-     DATASET,
-     EPOCHS,
-     SAVE_INTERVALL,
-     N_RESNET,
-     CYCLE_WEIGHT,
-     ID_WEIGHT,
-     ID) = (DEFAULT_CONFIG["WIDTH"],
-                    DEFAULT_CONFIG["HEIGHT"],
-                    DEFAULT_CONFIG["BATCH_SIZE"],
-                    DEFAULT_CONFIG["LR"],
-                    DEFAULT_CONFIG["DATASET"],
-                    DEFAULT_CONFIG["EPOCHS"],
-                    DEFAULT_CONFIG["SAVE_INTERVALL"],
-                    DEFAULT_CONFIG["N_RESNET"],
-                    DEFAULT_CONFIG["CYCLE_WEIGHT"],
-                    DEFAULT_CONFIG["ID_WEIGHT"],
-                    DEFAULT_CONFIG["ID"])
-     
-    wandb.init(project='Manga_color',config=DEFAULT_CONFIG,name=f"test{ID}",mode='disabled')
-    dataset = ImageDataset(
-        DATASET, 
-        transform=transforms.Compose([
-            transforms.Resize((WIDTH,HEIGHT)),
-            transforms.ToTensor(),
-            transforms.Normalize((.5, .5, .5), (.5, .5, .5))
-            ]),
-            unaligned=False,)
-
-    create_folders_id(f"weights/{ID}")
-    create_folders_id(f"results/{ID}")
-    dataloader = torch.utils.data.DataLoader(dataset,batch_size=BATCH_SIZE,shuffle=True,pin_memory=True,drop_last=True)
-    genB2A = Generator(3,3,N_RESNET).to(device)
-    genA2B = Generator(3,3,N_RESNET).to(device)
-    disc1 = Discriminator(3).to(device)
-    disc2 = Discriminator(3).to(device)
-
-    cycle_crit = nn.L1Loss().to(device)
-    identity_crit = nn.L1Loss().to(device)
-    adversarial_crit = nn.BCEWithLogitsLoss().to(device)
-
-    optG1 = torch.optim.Adam(genB2A.parameters(),lr=LR,betas=(0.5,0.999))
-    optG2 = torch.optim.Adam(genA2B.parameters(),lr=LR,betas=(0.5,0.999))
-    optD1 = torch.optim.Adam(disc1.parameters(),lr=LR,betas=(0.5,0.999))
-    optD2 = torch.optim.Adam(disc2.parameters(),lr=LR,betas=(0.5,0.999))
-    schedulers = [torch.optim.lr_scheduler.ExponentialLR(optG1,gamma=0.9),
-                  torch.optim.lr_scheduler.ExponentialLR(optG2,gamma=0.9),
-                  torch.optim.lr_scheduler.ExponentialLR(optD1,gamma=0.9),
-                  torch.optim.lr_scheduler.ExponentialLR(optD2,gamma=0.9)]
-    train(EPOCHS)
-    iter_data = next(iter(dataloader))
-    data_A = iter_data["A"]
-    data_B = iter_data["B"]
-    infer(data_A,data_B,10)
+def train_pixpix(
+        epochs,
+        dataloader,
+        gen,
+        disc,
+        adv_criterion,
+        feat_criterion,
+        optG,
+        optD,
+        schedulers,
+        ):
+    for epoch in range(epochs):
+        noise_var = 0.1
+        progress_bar = tqdm(enumerate(dataloader),total=len(dataloader))
+        for _,data in progress_bar:
+            data1 = data["B"].to(device)
+            data2 = data["A"].to(device)
+            data1 = data1 + torch.randn_like(data1)*noise_var
+            data2 = data2 + torch.randn_like(data2)*noise_var
+            noise_var = noise_var*0.99
+            losses = train_step_pix2pix(
+                gen,
+                disc,
+                data1,
+                data2,
+                optG,
+                optD,
+                adv_criterion,
+                feat_criterion,
+                device,
+                10
+            )
+            feature_loss, adversial_loss,disc_loss = losses[0],losses[1],losses[2]
+            progress_bar.set_description(f"Epoch {epoch+1}/{epochs}")
+            dict = {
+                "Feature_Loss":feature_loss,
+                "Adversial_Loss":adversial_loss,
+                "Discriminator_Loss":disc_loss
+            }
+            progress_bar.set_postfix({k:f"{v:.4f}" for k,v in dict.items()})
+            wandb.log(dict)
+        plot_test_pix2pix(gen,data1,data2,epoch,n_gen=4,save=True)
+        for scheduler in schedulers:
+            scheduler.step()
+        if epoch % SAVE_INTERVALL == 0:
+            torch.save(gen.state_dict(),f"weights/pix2pix/{ID}/gen1_{epoch+1}.pt")
+            torch.save(disc.state_dict(),f"weights/pix2pix/{ID}/disc1_{epoch+1}.pt")
+            plot_test_pix2pix(gen,data1,data2,epoch,n_gen=4,save=True)
