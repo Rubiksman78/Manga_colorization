@@ -1,5 +1,5 @@
 from scripts.dataset import ImageDataset
-from networks.cyclegan import *
+#from networks.cyclegan import *
 import torchvision.transforms as transforms
 import torch
 import torch.nn as nn
@@ -10,6 +10,9 @@ from scripts.utils import *
 import wandb 
 from scripts.train import train_cycle_gan,infer, train_pixpix
 from networks.perceptual_loss import VGGPerceptualLoss
+from networks.pix2pix import ResNetPix2Pix
+from networks.unetpix2pix import UNet,UNetPix2Pix
+from networks.disc_net import Discriminator
 
 if __name__ == "__main__":
     ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -101,9 +104,13 @@ if __name__ == "__main__":
         create_folders_id(f"weights/pix2pix/{ID}")
         create_folders_id(f"results/pix2pix/{ID}")
         dataloader = torch.utils.data.DataLoader(dataset,batch_size=BATCH_SIZE,shuffle=True,pin_memory=True,drop_last=True)
-        gen = Generator(3,3,N_RESNET).to(device)
+        #gen = Generator(3,3,N_RESNET).to(device)
+        gen = UNet(3,3).to(device)
         disc = Discriminator(3).to(device)
-       
+
+        #☺pix2pixmodel = ResNetPix2Pix(gen,disc)
+        pix2pixmodel = UNetPix2Pix(gen,disc)
+        pix2pixmodel.show_model_summary()
         adversarial_crit = nn.BCEWithLogitsLoss().to(device)
         feature_loss = VGGPerceptualLoss().to(device)
 
@@ -112,6 +119,7 @@ if __name__ == "__main__":
         schedulers = [torch.optim.lr_scheduler.ExponentialLR(optG,gamma=0.9),
                     torch.optim.lr_scheduler.ExponentialLR(optD,gamma=0.9)]
         train_pixpix(
+            pix2pixmodel,
             EPOCHS,
             dataloader,
             gen,

@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torchsummary import summary
 from config import DEFAULT_CONFIG
-from disc_net import Discriminator
+from networks.disc_net import Discriminator
 
 WIDTH,HEIGHT = DEFAULT_CONFIG["WIDTH"],DEFAULT_CONFIG["HEIGHT"]
 print_model = DEFAULT_CONFIG["PRINT_MODEL"]
@@ -58,35 +58,34 @@ class Generator(nn.Module):
     def forward(self, x):
         return self.model(x)
 
-if print_model:
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    gen = Generator(3,3,n_resnet=9).to(device)
-    print(summary(gen,(3,HEIGHT,WIDTH)))
-    dis = Discriminator(3).to(device)
-    print(summary(dis,(3,HEIGHT,WIDTH)))
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+gen = Generator(3,3,n_resnet=9).to(device)
+dis = Discriminator(3).to(device)
 
 class ResNetPix2Pix:
-    def __init__(self,lr=0.0002,beta1=0.5,beta2=0.999):
+    def __init__(self,gen,disc,lr=0.0002,beta1=0.5,beta2=0.999):
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.generator = Generator(3,3,n_resnet=9).to(self.device)
-        self.discriminator = Discriminator(3).to(self.device)
+        self.gen = gen.to(self.device)
+        self.disc = disc.to(self.device)
+
+    def show_model_summary(self):
+        print(summary(self.gen,(3,HEIGHT,WIDTH)))
+        print(summary(self.disc,(3,HEIGHT,WIDTH)))
 
     def train_step_pix2pix(
-            gen,
-            disc,
+            self,
             dataA,
             dataB,
             gen_opt,
             disc_opt,
             adv_loss,
             feat_loss,
-            device,
             feat_weight,
             ):
         gen_opt.zero_grad()
-        b_generated = gen(dataA)
-        b_generated_score = disc(b_generated)
-        real_labels = torch.ones(b_generated_score.size()).to(device)
+        b_generated = self.gen(dataA)
+        b_generated_score = self.disc(b_generated)
+        real_labels = torch.ones(b_generated_score.size()).to(self.device)
         adversial_loss =  adv_loss(b_generated_score,real_labels)
         feature_loss = feat_loss(b_generated,dataB) * feat_weight
         gen_loss = adversial_loss + feature_loss
@@ -95,11 +94,11 @@ class ResNetPix2Pix:
 
         disc_opt.zero_grad()
         b_real = dataB
-        b_real_score = disc(b_real)
-        b_generated = gen(dataA)
-        b_generated_score = disc(b_generated)
-        fake_labels = torch.zeros(b_generated_score.size()).to(device)
-        real_labels = torch.ones(b_real_score.size()).to(device)
+        b_real_score = self.disc(b_real)
+        b_generated = self.gen(dataA)
+        b_generated_score = self.disc(b_generated)
+        fake_labels = torch.zeros(b_generated_score.size()).to(self.device)
+        real_labels = torch.ones(b_real_score.size()).to(self.device)
         disc_loss =  adv_loss(b_generated_score,fake_labels) + adv_loss(b_real_score,real_labels)
         disc_loss.backward()
         disc_opt.step()

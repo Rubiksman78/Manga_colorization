@@ -1,7 +1,7 @@
 from networks.cyclegan import *
 import torch
 from tqdm import tqdm
-from utils import *
+from scripts.utils import *
 import wandb 
 from networks.pix2pix import *
 
@@ -121,6 +121,7 @@ def infer(data1,data2,n_gen,checkpoint=11):
     plot_test(genB2A,genA2B,data1,data2,0,n_gen,save=False)
     
 def train_pixpix(
+        model,
         epochs,
         dataloader,
         gen,
@@ -140,17 +141,14 @@ def train_pixpix(
             data1 = data1 + torch.randn_like(data1)*noise_var
             data2 = data2 + torch.randn_like(data2)*noise_var
             noise_var = noise_var*0.99
-            losses = train_step_pix2pix(
-                gen,
-                disc,
+            losses = model.train_step_pix2pix(
                 data1,
                 data2,
                 optG,
                 optD,
                 adv_criterion,
                 feat_criterion,
-                device,
-                10
+                feat_weight=10
             )
             feature_loss, adversial_loss,disc_loss = losses[0],losses[1],losses[2]
             progress_bar.set_description(f"Epoch {epoch+1}/{epochs}")
