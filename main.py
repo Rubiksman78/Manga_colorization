@@ -40,7 +40,7 @@ if __name__ == "__main__":
                     DEFAULT_CONFIG["ID_WEIGHT"],
                     DEFAULT_CONFIG["ID"])
      
-    wandb.init(project='Manga_color',config=DEFAULT_CONFIG,name=f"test{ID}",mode='disabled')
+    wandb.init(project='Manga_color',config=DEFAULT_CONFIG,name=f"test{ID}")
     use_cyclegan = False
 
     if use_cyclegan:
@@ -100,7 +100,7 @@ if __name__ == "__main__":
             transforms.Normalize((.5, .5, .5), (.5, .5, .5))
             ]),
             unaligned=False,)
-        dataset = torch.utils.data.Subset(dataset,range(100))
+        dataset = torch.utils.data.Subset(dataset,range(1000))
         create_folders_id(f"weights/pix2pix/{ID}")
         create_folders_id(f"results/pix2pix/{ID}")
         dataloader = torch.utils.data.DataLoader(dataset,batch_size=BATCH_SIZE,shuffle=True,pin_memory=True,drop_last=True)
