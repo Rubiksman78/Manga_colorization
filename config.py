@@ -10,5 +10,5 @@ DEFAULT_CONFIG = {
     "N_RESNET":8,
     "CYCLE_WEIGHT":10,
     "ID_WEIGHT":0.5,
-    "ID":2
+    "ID":1
 }

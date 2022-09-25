@@ -72,9 +72,9 @@ def plot_test_pix2pix(gen,data1,data2,epoch,n_gen=6,save=True):
     data2 = data2[:n]
     for i in range(len(data1)):
         im = data2[i]
-        fake_1 = gen(im)*0.5+0.5
+        fake_1 = gen(im.unsqueeze(0))*0.5+0.5
         fake_1 = fake_1.detach().cpu().numpy()
-        print(np.max(fake_1),np.min(fake_1))
+        fake_1 = fake_1.squeeze(0)
         im = im.detach().cpu().numpy()*0.5+0.5
         plt.subplot(n,2,2*i+1)
         plt.imshow(im.transpose(1,2,0))

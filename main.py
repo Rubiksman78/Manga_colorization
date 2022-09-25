@@ -100,7 +100,7 @@ if __name__ == "__main__":
             transforms.Normalize((.5, .5, .5), (.5, .5, .5))
             ]),
             unaligned=False,)
-        dataset = torch.utils.data.Subset(dataset,range(10000))
+        dataset = torch.utils.data.Subset(dataset,range(100))
         create_folders_id(f"weights/pix2pix/{ID}")
         create_folders_id(f"results/pix2pix/{ID}")
         dataloader = torch.utils.data.DataLoader(dataset,batch_size=BATCH_SIZE,shuffle=True,pin_memory=True,drop_last=True)
