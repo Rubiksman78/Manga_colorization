@@ -1,4 +1,3 @@
-from turtle import width
 import torch 
 import torch.nn as nn
 from torchsummary import summary
