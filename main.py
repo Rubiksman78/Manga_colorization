@@ -100,7 +100,7 @@ if __name__ == "__main__":
             transforms.Normalize((.5, .5, .5), (.5, .5, .5))
             ]),
             unaligned=False,)
-        dataset = torch.utils.data.Subset(dataset,range(100))
+        #dataset = torch.utils.data.Subset(dataset,range(100))
         create_folders_id(f"weights/pix2pix/{ID}")
         create_folders_id(f"results/pix2pix/{ID}")
         dataloader = torch.utils.data.DataLoader(dataset,batch_size=BATCH_SIZE,shuffle=True,pin_memory=True,drop_last=True)
@@ -108,7 +108,7 @@ if __name__ == "__main__":
         gen = UNet(3,3).to(device)
         disc = Discriminator(3).to(device)
 
-        #☺pix2pixmodel = ResNetPix2Pix(gen,disc)
+        #pix2pixmodel = ResNetPix2Pix(gen,disc)
         pix2pixmodel = UNetPix2Pix(gen,disc)
         pix2pixmodel.show_model_summary()
         adversarial_crit = nn.BCEWithLogitsLoss().to(device)
