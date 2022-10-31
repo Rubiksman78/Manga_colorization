@@ -13,6 +13,7 @@ from networks.perceptual_loss import VGGPerceptualLoss
 from networks.pix2pix import ResNetPix2Pix
 from networks.unetpix2pix import UNet,UNetPix2Pix
 from networks.disc_net import Discriminator
+from networks.cyclegan import Generator
 
 if __name__ == "__main__":
     ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -41,7 +42,7 @@ if __name__ == "__main__":
                     DEFAULT_CONFIG["ID"])
      
     wandb.init(project='Manga_color',config=DEFAULT_CONFIG,name=f"test{ID}",mode='disabled')
-    use_cyclegan = False
+    use_cyclegan = True
 
     if use_cyclegan:
         print("Cycle GAN is training")
@@ -52,15 +53,24 @@ if __name__ == "__main__":
             transforms.ToTensor(),
             transforms.Normalize((.5, .5, .5), (.5, .5, .5))
             ]),
-            unaligned=False,)
-
-        create_folders_id(f"weights/{ID}")
-        create_folders_id(f"results/{ID}")
-        dataloader = torch.utils.data.DataLoader(dataset,batch_size=BATCH_SIZE,shuffle=True,pin_memory=True,drop_last=True)
-        genB2A = Generator(3,3,N_RESNET).to(device)
-        genA2B = Generator(3,3,N_RESNET).to(device)
+            unaligned=False,
+            cyclegan=True)
+        #dataset = torch.utils.data.Subset(dataset,range(100))
+        train_size = int(0.9 * len(dataset))
+        test_size = len(dataset) - train_size
+        train_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
+        #Subset
+        create_folders_id(f"weights/cyclegan/{ID}")
+        create_folders_id(f"results/cyclegan/{ID}")
+        train_dataloader = torch.utils.data.DataLoader(train_dataset,batch_size=BATCH_SIZE,shuffle=True,pin_memory=True,drop_last=True)
+        test_dataloader = torch.utils.data.DataLoader(test_dataset,batch_size=BATCH_SIZE,shuffle=True)
+        for i in test_dataloader:
+            print(i["A"].shape,i["B"].shape)
+            break
+        genB2A = UNet(1,3).to(device)
+        genA2B = UNet(3,1).to(device)
         disc1 = Discriminator(3).to(device)
-        disc2 = Discriminator(3).to(device)
+        disc2 = Discriminator(1).to(device)
 
         cycle_crit = nn.L1Loss().to(device)
         identity_crit = nn.L1Loss().to(device)
@@ -76,7 +86,7 @@ if __name__ == "__main__":
                     torch.optim.lr_scheduler.ExponentialLR(optD2,gamma=0.9)]
         train_cycle_gan(
             EPOCHS,
-            dataloader,
+            train_dataloader,
             genB2A,
             genA2B,
             disc1,
@@ -104,11 +114,9 @@ if __name__ == "__main__":
                         transform=transformations,
                         unaligned=False,)
         #dataset = torch.utils.data.Subset(dataset,range(100))
-        #Train,test split
         train_size = int(0.9 * len(dataset))
         test_size = len(dataset) - train_size
         train_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
-        #Create dataloaders
         train_dataloader = torch.utils.data.DataLoader(train_dataset,batch_size=BATCH_SIZE,shuffle=True,pin_memory=True,drop_last=True)
         test_dataloader = torch.utils.data.DataLoader(test_dataset,batch_size=BATCH_SIZE,shuffle=True)
         create_folders_id(f"weights/pix2pix/{ID}")

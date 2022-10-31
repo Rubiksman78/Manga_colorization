@@ -94,14 +94,12 @@ class Generator(nn.Module):
         return self.model(x)
 
 if print_model:
-    """
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     gen = Generator(3,3,n_resnet=9).to(device)
     print(summary(gen,(3,HEIGHT,WIDTH)))
     dis = Discriminator(3).to(device)
     print(summary(dis,(3,HEIGHT,WIDTH)))
-    """
-
+    
 def train_step(
         batch_size,
         genB2A,
@@ -121,15 +119,14 @@ def train_step(
         cycle_weight,
         id_weight
         ):
-    #data1 = A (Gray images), data2 = B (color images)
+    #data1 = A (Color images), data2 = B (gray images)
     
     fake_image_A = genB2A(dataB)
     fake_output_A = disc1(fake_image_A)
-    #
+    
     real_label = 0.9*torch.ones_like(fake_output_A).to(device)
     fake_label = torch.zeros_like(fake_output_A).to(device)
-    #
-    """
+    
     #Update disc1
     disc1_optim.zero_grad()
     real_output_A = disc1(dataA)
@@ -142,7 +139,7 @@ def train_step(
     loss_fake_A.backward()
     errD_A = 0.5*(loss_real_A + loss_fake_A)
     disc1_optim.step()
-    """
+    
     #Update disc2
     for i in range(3):
         disc2_optim.zero_grad()
@@ -156,10 +153,13 @@ def train_step(
         loss_fake_B.backward()
         errD_B = 0.5*(loss_real_B + loss_fake_B)
         disc2_optim.step()
-    """
+    
     #Update genB2A
     genB2A_optim.zero_grad()    
-    identity_image_A = genB2A(dataA)
+    #Convert dataA (color) to gray
+    dataA_gray = 0.299*dataA[:,0,:,:] + 0.587*dataA[:,1,:,:] + 0.114*dataA[:,2,:,:]
+    dataA_gray = dataA_gray.unsqueeze(1)
+    identity_image_A = genB2A(dataA_gray)
     loss_identity_A = identity_loss(identity_image_A,dataA) 
     
     fake_image_A = genB2A(dataB)
@@ -177,18 +177,20 @@ def train_step(
     errG1 = id_weight * loss_identity_A + loss_gan_1 + cycle_weight * loss_cycle_A 
     errG1.backward()
     genB2A_optim.step()
-    """
+    
     #Update genA2B
     genA2B_optim.zero_grad()
-    identity_image_B = genA2B(dataB)
+    #Convert dataB (gray) to color
+    dataB_color = dataB.repeat(1,3,1,1)
+    identity_image_B = genA2B(dataB_color)
     loss_identity_B = identity_loss(identity_image_B,dataB) 
     
     fake_image_B = genA2B(dataA)
     fake_output_B = disc2(fake_image_B)
     loss_gan_2 = adversarial_loss(fake_output_B,real_label)
     
-    #fake_image_A = genB2A(dataB)
-    fake_image_A = torchvision.transforms.functional.rgb_to_grayscale(dataB, num_output_channels=3)
+    fake_image_A = genB2A(dataB)
+    #fake_image_A = torchvision.transforms.functional.rgb_to_grayscale(dataB, num_output_channels=3)
     recovered_image_B = genA2B(fake_image_A)
     loss_cycle_B = cycle_loss(recovered_image_B,dataB) 
     
@@ -196,7 +198,7 @@ def train_step(
     errG2.backward()
     genA2B_optim.step()
     
-    errD_A,errG1,loss_identity_A,loss_cycle_A,loss_gan_1 = 0,0,0,0,0
+    #errD_A,errG1,loss_identity_A,loss_cycle_A,loss_gan_1 = 0,0,0,0,0
     return {
             "Loss D_B2A":errD_A,
             "Loss D_A2B":errD_B.item(),

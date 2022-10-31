@@ -44,14 +44,10 @@ def train_cycle_gan(
         schedulers
         ):
     for epoch in range(epochs):
-        noise_var = 0.1
         progress_bar = tqdm(enumerate(dataloader),total=len(dataloader))
         for _,data in progress_bar:
             data1 = data["A"].to(device)
             data2 = data["B"].to(device)
-            data1 = data1 + torch.randn_like(data1)*noise_var
-            data2 = data2 + torch.randn_like(data2)*noise_var
-            noise_var = noise_var*0.99
             losses = train_step(
                 BATCH_SIZE,
                 genB2A,
@@ -103,14 +99,14 @@ def train_cycle_gan(
                 "Gan_Loss_A2B":gan_loss_A2B}
             progress_bar.set_postfix({k:f"{v:.4f}" for k,v in dict.items()})
             wandb.log(dict)
-        plot_test(genB2A,genA2B,data1,data2,epoch,n_gen=4,save=False)
+        plot_test(genB2A,genA2B,data1,data2,epoch,n_gen=4,save=True)
         for scheduler in schedulers:
             scheduler.step()
         if epoch % SAVE_INTERVALL == 0:
-            torch.save(genB2A.state_dict(),f"weights/{ID}/gen1_{epoch+1}.pt")
-            torch.save(genA2B.state_dict(),f"weights/{ID}/gen2_{epoch+1}.pt")
-            torch.save(disc1.state_dict(),f"weights/{ID}/disc1_{epoch+1}.pt")
-            torch.save(disc2.state_dict(),f"weights/{ID}/disc2_{epoch+1}.pt")
+            torch.save(genB2A.state_dict(),f"weights/cyclegan/{ID}/gen1_{epoch+1}.pt")
+            torch.save(genA2B.state_dict(),f"weights/cyclegan/{ID}/gen2_{epoch+1}.pt")
+            torch.save(disc1.state_dict(),f"weights/cyclegan/{ID}/disc1_{epoch+1}.pt")
+            torch.save(disc2.state_dict(),f"weights/cyclegan/{ID}/disc2_{epoch+1}.pt")
             plot_test(genB2A,genA2B,data1,data2,epoch,n_gen=4,save=True)
             
 def infer(data1,data2,n_gen,checkpoint=11):
@@ -167,4 +163,3 @@ def train_pixpix(
         if epoch % SAVE_INTERVALL == 0:
             torch.save(gen.state_dict(),f"weights/pix2pix/{ID}/gen1_{epoch+1}.pt")
             torch.save(disc.state_dict(),f"weights/pix2pix/{ID}/disc1_{epoch+1}.pt")
-

@@ -24,18 +24,19 @@ def plot_test(genB2A,genA2B,data1,data2,epoch,n_gen=6,save=True):
     data2 = data2[:n]
     for i in range(len(data1)):
         im = data2[i]
-        fake_1 = genB2A(im)*0.5+0.5
+        fake_1 = genB2A(im.unsqueeze(0))*0.5+0.5
         fake_1 = fake_1.detach().cpu().numpy()
+        fake_1 = fake_1.squeeze(0)
         im = im.detach().cpu().numpy()*0.5+0.5
         plt.subplot(n,2,2*i+1)
-        plt.imshow(im.transpose(1,2,0))
+        plt.imshow(im.transpose(1,2,0),cmap="gray")
         plt.axis("off")
         plt.subplot(n,2,2*i+2)
         plt.imshow(fake_1.transpose(1,2,0))
         plt.axis("off")
     if save:
         wandb.log({"Grey_images": plt})
-        plt.savefig(f"results/{ID}/{epoch+1}.png")
+        plt.savefig(f"results/cyclegan/{ID}/{epoch+1}.png")
         plt.close()
     else:
         wandb.log({"Grey_images": plt})
@@ -43,18 +44,19 @@ def plot_test(genB2A,genA2B,data1,data2,epoch,n_gen=6,save=True):
     fig = plt.figure(figsize=(12,12))
     for i in range(len(data2)):
         im = data1[i]
-        fake_2 = genA2B(im)*0.5+0.5
+        fake_2 = genA2B(im.unsqueeze(0))*0.5+0.5
         fake_2 = fake_2.detach().cpu().numpy()
+        fake_2 = fake_2.squeeze(0)
         im = im.detach().cpu().numpy()*0.5+0.5
         plt.subplot(n,2,2*i+1)
         plt.imshow(im.transpose(1,2,0))
         plt.axis("off")
         plt.subplot(n,2,2*i+2)
-        plt.imshow(fake_2.transpose(1,2,0))
+        plt.imshow(fake_2.transpose(1,2,0),cmap="gray")
         plt.axis("off")
     if save:
         wandb.log({"Color_images": plt})
-        plt.savefig(f"results/{ID}/{epoch+1}_2.png")
+        plt.savefig(f"results/cyclegan/{ID}/{epoch+1}_2.png")
         plt.close()
     else:
         wandb.log({"Color_images": plt})
