@@ -92,25 +92,40 @@ if __name__ == "__main__":
             )
     else:
         print("Pix2Pix is training")
-        dataset = ImageDataset(
-        DATASET, 
-        transform=transforms.Compose([
+        #Data augmnentation
+        transformations = transforms.Compose([
             transforms.Resize((WIDTH,HEIGHT)),
             transforms.ToTensor(),
             transforms.Normalize((.5, .5, .5), (.5, .5, .5))
-            ]),
-            unaligned=False,)
+            ])
+
+        dataset = ImageDataset(
+                        DATASET, 
+                        transform=transformations,
+                        unaligned=False,)
         #dataset = torch.utils.data.Subset(dataset,range(100))
+        #Train,test split
+        train_size = int(0.9 * len(dataset))
+        test_size = len(dataset) - train_size
+        train_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
+        #Create dataloaders
+        train_dataloader = torch.utils.data.DataLoader(train_dataset,batch_size=BATCH_SIZE,shuffle=True,pin_memory=True,drop_last=True)
+        test_dataloader = torch.utils.data.DataLoader(test_dataset,batch_size=BATCH_SIZE,shuffle=True)
         create_folders_id(f"weights/pix2pix/{ID}")
         create_folders_id(f"results/pix2pix/{ID}")
-        dataloader = torch.utils.data.DataLoader(dataset,batch_size=BATCH_SIZE,shuffle=True,pin_memory=True,drop_last=True)
+        #Check shape of data
+        for i in test_dataloader:
+            print(i["A"].shape,i["B"].shape)
+            break
         #gen = Generator(3,3,N_RESNET).to(device)
-        gen = UNet(3,3).to(device)
+        gen = UNet(1,3).to(device)
         disc = Discriminator(3).to(device)
+        
+        #gen.load_state_dict(torch.load("weights/pix2pix/1/gen1_21.pt"))
+        #disc.load_state_dict(torch.load("weights/pix2pix/1/disc1_21.pt"))
 
-        #pix2pixmodel = ResNetPix2Pix(gen,disc)
         pix2pixmodel = UNetPix2Pix(gen,disc)
-        pix2pixmodel.show_model_summary()
+        #pix2pixmodel.show_model_summary()
         adversarial_crit = nn.BCEWithLogitsLoss().to(device)
         feature_loss = VGGPerceptualLoss().to(device)
 
@@ -118,19 +133,22 @@ if __name__ == "__main__":
         optD = torch.optim.Adam(disc.parameters(),lr=LR,betas=(0.5,0.999))
         schedulers = [torch.optim.lr_scheduler.ExponentialLR(optG,gamma=0.9),
                     torch.optim.lr_scheduler.ExponentialLR(optD,gamma=0.9)]
+        #data1 = next(iter(test_dataloader))["A"].to(device)
+        #data2 = next(iter(test_dataloader))["B"].to(device)
+        #plot_test_pix2pix(gen,data2,data1,epoch=10000,n_gen=1,save=False)
+              
         train_pixpix(
             pix2pixmodel,
             EPOCHS,
-            dataloader,
+            train_dataloader,
             gen,
             disc,
             adversarial_crit,
             feature_loss,
             optG,
             optD,
-            schedulers
+            schedulers,
+            test_dataloader
         )
-    iter_data = next(iter(dataloader))
-    data_A = iter_data["A"]
-    data_B = iter_data["B"]
-    infer(data_A,data_B,10)
+        
+        

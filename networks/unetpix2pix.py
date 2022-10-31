@@ -7,7 +7,6 @@ from config import DEFAULT_CONFIG
 
 WIDTH,HEIGHT = DEFAULT_CONFIG["WIDTH"],DEFAULT_CONFIG["HEIGHT"]
 
-
 class DoubleConv(nn.Module):
     def __init__(self,in_channels,out_channels,mid_channels=None):
         super(DoubleConv,self).__init__()
@@ -87,9 +86,9 @@ class UNet(nn.Module):
         x2 = self.down1(x1)
         x3 = self.down2(x2)
         x4 = self.down3(x3)
-        x5 = self.down4(x4)
-        x = self.up1(x5,x4)
-        x = self.up2(x,x3)
+        #x5 = self.down4(x4)
+        #x = self.up1(x5,x4)
+        x = self.up2(x4,x3)
         x = self.up3(x,x2)
         x = self.up4(x,x1)
         logits = self.outc(x)
@@ -102,7 +101,7 @@ class UNetPix2Pix:
         self.disc = disc.to(self.device)
 
     def show_model_summary(self):
-        torchsummary.summary(self.gen,(3,WIDTH,HEIGHT))
+        torchsummary.summary(self.gen,(1,WIDTH,HEIGHT))
         torchsummary.summary(self.disc,(3,WIDTH,HEIGHT))
 
     def train_step_pix2pix(

@@ -131,6 +131,7 @@ def train_pixpix(
         optG,
         optD,
         schedulers,
+        test_dataloader
         ):
     for epoch in range(epochs):
         progress_bar = tqdm(enumerate(dataloader),total=len(dataloader))
@@ -157,10 +158,13 @@ def train_pixpix(
             }
             progress_bar.set_postfix({k:f"{v:.4f}" for k,v in dict.items()})
             wandb.log(dict)
-        plot_test_pix2pix(gen,data1,data2,epoch,n_gen=4,save=True)
+        #Plot test images
+        dataA = next(iter(test_dataloader))["A"].to(device)
+        dataB = next(iter(test_dataloader))["B"].to(device)
+        plot_test_pix2pix(gen,dataB,dataA,epoch,n_gen=4,save=True)
         for scheduler in schedulers:
             scheduler.step()
         if epoch % SAVE_INTERVALL == 0:
             torch.save(gen.state_dict(),f"weights/pix2pix/{ID}/gen1_{epoch+1}.pt")
             torch.save(disc.state_dict(),f"weights/pix2pix/{ID}/disc1_{epoch+1}.pt")
-            plot_test_pix2pix(gen,data1,data2,epoch,n_gen=4,save=True)
+
