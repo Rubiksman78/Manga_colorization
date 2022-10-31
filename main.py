@@ -121,8 +121,8 @@ if __name__ == "__main__":
         gen = UNet(1,3).to(device)
         disc = Discriminator(3).to(device)
         
-        #gen.load_state_dict(torch.load("weights/pix2pix/1/gen1_21.pt"))
-        #disc.load_state_dict(torch.load("weights/pix2pix/1/disc1_21.pt"))
+        gen.load_state_dict(torch.load("2/gen1_11.pt"))
+        disc.load_state_dict(torch.load("2/disc1_11.pt"))
 
         pix2pixmodel = UNetPix2Pix(gen,disc)
         #pix2pixmodel.show_model_summary()
@@ -133,10 +133,16 @@ if __name__ == "__main__":
         optD = torch.optim.Adam(disc.parameters(),lr=LR,betas=(0.5,0.999))
         schedulers = [torch.optim.lr_scheduler.ExponentialLR(optG,gamma=0.9),
                     torch.optim.lr_scheduler.ExponentialLR(optD,gamma=0.9)]
-        #data1 = next(iter(test_dataloader))["A"].to(device)
-        #data2 = next(iter(test_dataloader))["B"].to(device)
-        #plot_test_pix2pix(gen,data2,data1,epoch=10000,n_gen=1,save=False)
-              
+        
+        testing_dataset = ImageDataset(
+                        "image_data",
+                        transform=transformations,
+                        unaligned=False,)
+        dataloader = torch.utils.data.DataLoader(testing_dataset,batch_size=8,shuffle=True)
+        data1 = next(iter(dataloader))["A"].to(device)
+        data2 = next(iter(dataloader))["B"].to(device)
+        plot_test_pix2pix(gen,data2,data1,epoch=10000,n_gen=4,save=False)
+        """
         train_pixpix(
             pix2pixmodel,
             EPOCHS,
@@ -150,5 +156,5 @@ if __name__ == "__main__":
             schedulers,
             test_dataloader
         )
-        
+        """
         
