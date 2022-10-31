@@ -5,7 +5,7 @@ Chapter 204, it's time for the final confession (and the story finally ends !). 
 
 This repo aims to colorize your favorite manga without denaturing the art and with enough consistency during the story.
 It uses a Cycle-GAN base approach trained on unpaired images of grayshade and color manga panels.
-An implementation with Pix2Pix Generator (ResNet and Unet) is also proposed to improve results. The obtention of paired images is simply done by grayscaling colored manga panels for simplicity and language coherence in text bubbles.
+An implementation with Pix2Pix Generator (ResNet and Unet) is also proposed to improve results. The obtention of paired images is simply done by grayscaling colored manga panels for simplicity.
 
 ## Installation
 
@@ -15,4 +15,13 @@ git clone https://github.com/Rubiksman78/Manga_colorization.git
 pip install -r requirements.txt
 ```
 
-## Usage
+## Structure
+
+- networks: implementations of CycleGAN and Pix2Pix with a ResNET and a U-Net architecure. An implementation of a perceptual loss is also done with VGG-16 for Pix2Pix training.
+- scripts: multiple scripts to convert pdf scans to images folder. There are also utils functions for plotting and training loops for both CycleGAN and Pix2Pix
+- main.py : main script to train the model
+- config.py : configuration dictionnary for experiments
+
+## Results
+
+![First result](images/example1.png)
