@@ -17,11 +17,10 @@ pip install -r requirements.txt
 
 ## Structure
 
-- networks: implementations of CycleGAN and Pix2Pix with a ResNET and a U-Net architecure. An implementation of a perceptual loss is also done with VGG-16 for Pix2Pix training.
-- scripts: multiple scripts to convert pdf scans to images folder. There are also utils functions for plotting and training loops for both CycleGAN and Pix2Pix
-- main.py : main script to train the model
-- config.py : configuration dictionnary for experiments
+- `networks`: implementations of CycleGAN and Pix2Pix with a ResNET and a U-Net architecure. An implementation of a perceptual loss is also done with VGG-16 for Pix2Pix training.
+- `scripts`: multiple scripts to convert pdf scans to images folder. There are also utils functions for plotting and training loops for both CycleGAN and Pix2Pix
+- `main.py` : main script to train the model
+- `config.py` : configuration dictionnary for experiments
 
 ## Results
 
-![First result](images/example1.png)
